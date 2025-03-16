@@ -1,6 +1,6 @@
 MODULE error_handling
    IMPLICIT NONE
-   CHARACTER(LEN=256) :: error_message
+   CHARACTER(LEN=256) :: error_message = "No error"
    INTEGER :: error_code = 0
    LOGICAL :: has_error = .FALSE.
 
@@ -9,7 +9,7 @@ CONTAINS
    SUBROUTINE set_error(code, message)
       INTEGER, INTENT(IN) :: code
       CHARACTER(LEN=*), INTENT(IN) :: message
-
+      print *, 'Error:', code, message
       error_code = code
       error_message = message
       has_error = .TRUE.
@@ -71,8 +71,8 @@ CONTAINS
       LOGICAL, INTENT(IN) :: isComp
       REAL(KIND=8), INTENT(IN) :: angle(:), freq(:), density(:), thick(:), cp(:), attp(:), cs(:), atts(:)
       complex(KIND=8), INTENT(IN):: LongM(:), mu(:)
-      REAL(KIND=8), INTENT(OUT) :: RpE(:), TpE(:), RsE(:), TsE(:)
-      complex(kind=8), intent(out) :: rp(:), tp(:), rs(:), ts(:)
+      REAL(KIND=8), INTENT(INOUT) :: RpE(:), TpE(:), RsE(:), TsE(:)
+      complex(kind=8), intent(INOUT) :: rp(:), tp(:), rs(:), ts(:)
       INTEGER, INTENT(OUT) :: ret_code
       CHARACTER(LEN=256), INTENT(OUT) :: ret_message
 
@@ -100,6 +100,8 @@ CONTAINS
       integer :: i, numLayers, numCalcs
       real(kind=8) :: cosinc, omega
 
+      PRINT *, 'Test 1'
+
       if (size(freq) > 1 .and. size(angle) > 1) then
          call set_error(2, 'There can only be a vector of either angle or frequency the over variable is a scaler.')
          return
@@ -111,81 +113,74 @@ CONTAINS
 
       if (numLayers < 2) then
          call set_error(2, 'There must be at least two layers in the composite material.')
-         return
       end if
 
       if (numLayers /= size(cp) .or. numLayers /= size(attp) .or. numLayers /= size(LongM) .or. numLayers /= size(cs) &
           .or. numLayers /= size(atts) .or. numLayers /= size(mu)) then
          call set_error(2, 'The size of the material properties vectors must be equal.')
-         return
       end if
 
-      IF (ANY(angle <= 0.0)) THEN
-         CALL set_error(2, 'Angle values must be positive')
-         RETURN
+      IF (ANY(angle < 0.0 .and. angle <= 90.0)) THEN
+         CALL set_error(2, 'Angle values must be positive and less that 90 degrees')
       END IF
 
       IF (ANY(freq <= 0.0)) THEN
          CALL set_error(2, 'Frequency values must be positive')
-         RETURN
       END IF
 
       IF (ANY(density <= 0.0)) THEN
          CALL set_error(2, 'Density values must be positive')
-         RETURN
       END IF
 
-      IF (ANY(cp <= 0.0)) THEN
+      IF (ANY(cp < 0.0)) THEN
          CALL set_error(2, 'Compressional wave speed values must be positive')
-         RETURN
       END IF
 
-      IF (ANY(attp <= 0.0)) THEN
+      IF (ANY(attp < 0.0)) THEN
          CALL set_error(2, 'Attenuation values for compressional wave must be positive')
-         RETURN
       END IF
 
-      IF (ANY(cs <= 0.0)) THEN
+      IF (ANY(cs < 0.0)) THEN
          CALL set_error(2, 'Shear wave speed values must be positive')
-         RETURN
       END IF
 
-      IF (ANY(atts <= 0.0)) THEN
+      IF (ANY(atts < 0.0)) THEN
          CALL set_error(2, 'Attenuation values for shear wave must be positive')
-         RETURN
       END IF
 
       DO i = 1, numLayers
          IF (cp(i) > 0.0 .and. abs(LongM(i)) > 0.0) THEN
             CALL set_error(2, 'Only the compressional wave or the longitudinal modulus can be defined for a layer.')
-            RETURN
          END IF
 
          IF (cs(i) > 0.0 .and. abs(mu(i)) > 0.0) THEN
             CALL set_error(2, 'Only the shear wave or the shear modulus can be defined for a layer.')
-            RETURN
          END IF
       END DO
 
       IF (ANY(REAL(LongM) < 0.0)) THEN
          CALL set_error(2, 'Real part of Longitudinal modulus values must not be less than zero')
-         RETURN
       END IF
 
       IF (ANY(AIMAG(LongM) < 0.0)) THEN
          CALL set_error(2, 'Imaginary part of Longitudinal modulus values must not be less than zero')
-         RETURN
       END IF
 
       IF (ANY(REAL(mu) < 0.0)) THEN
          CALL set_error(9, 'Real part of shear modulus values must not be less than zero')
-         RETURN
       END IF
 
       IF (ANY(AIMAG(mu) < 0.0)) THEN
          CALL set_error(10, 'Imaginary part of the shear modulus values must not be less than zero')
-         RETURN
       END IF
+
+      if (has_error) then
+         ret_message = error_message
+         ret_code = error_code
+         return
+      end if
+
+      PRINT *, 'Test 2'
 
       !ALLOCATE (rp(numCalcs), tp(numCalcs), rs(numCalcs), ts(numCalcs))
       !ALLOCATE (RpE(numCalcs), TpE(numCalcs), RsE(numCalcs), TsE(numCalcs))
@@ -199,8 +194,14 @@ CONTAINS
             omega = freq(1)*twopi
          end if
 
-        call RESPONSE(isComp, cosinc, omega, density, thick, cp, cs, attp, atts, LongM, mu, &
-         rp(i), tp(i), rs(i), ts(i), RpE(i), TpE(i), RsE(i), TsE(i))
+         call RESPONSE(isComp, cosinc, omega, density, thick, cp, cs, attp, atts, LongM, mu, &
+                       rp(i), tp(i), rs(i), ts(i), RpE(i), TpE(i), RsE(i), TsE(i))
+
+         if (has_error) then
+            ret_message = error_message
+            ret_code = error_code
+            return
+         end if
       END DO
 
       ret_message = error_message
@@ -216,7 +217,8 @@ CONTAINS
       REAL(KIND=8), INTENT(IN) :: rho, c, atten, omega
       COMPLEX(KIND=8) :: WaveToModulus
 
-      WaveToModulus = rho/(1/c - (Atten/omega)*dBtoNp*imagI)**2
+      ! WaveToModulus = rho/(1/c - (atten/omega)*dBtoNp*imagI)**2
+      WaveToModulus = rho/complex(1D0/c, -(atten/omega))**2
 
       IF (real(WaveToModulus) .lt. 0D0) THEN
          call set_error(3, 'The real component of the modulus is negative')
@@ -302,27 +304,56 @@ CONTAINS
 
    SUBROUTINE LayerPhysical(rho, omega, cp, attp, iLongM, cs, atts, imu, LongM, mu)
       USE error_handling
+      USE SPECIAL_CONSTANTS
       IMPLICIT NONE
 
       REAL(KIND=8), INTENT(IN) :: rho, omega, cp, attp, cs, atts
-      complex(KIND=8), INTENT(in) :: iLongM, iMu
-      COMPLEX(KIND=8), INTENT(OUT) :: LongM, Mu
+      complex(KIND=8), INTENT(in) :: iLongM, imu
+      COMPLEX(KIND=8), INTENT(OUT) :: LongM, mu
 
-      if (imu .eq. 0) then
+      if (cs .gt. 0D0) then
          mu = WaveToModulus(rho, cs, atts, omega)
          IF (has_error) RETURN
       else
          mu = imu
       end if
 
-      if (iLongM .eq. 0) then
+      ! If the modulus real or imag is zero set it equal to a minimal value for numberical stability.
+      if (AIMAG(mu) .lt. 1D0) then
+         mu = mu + eps*imagI
+      end if
+
+      if (REAL(mu) .lt. 1D0) then
+         mu = mu + eps*1D0
+      end if
+
+      if (cp .gt. 0D0) then
          LongM = WaveToModulus(rho, cp, attp, omega)
          IF (has_error) RETURN
       else
          LongM = iLongM
       end if
-      ! Write (6,*) 'mu 0:', mu0
-      ! Write (6,*) 'Longitudinal Modulus 0:', LongM0
+
+      ! If the modulus real or imag is zero set it equal to a minimal value for numberical stability.
+      if (AIMAG(LongM) .lt. 1) then
+         LongM = LongM + eps*2*imagI
+      end if
+
+      if (REAL(LongM) .lt. 1) then
+         LongM = LongM + eps*1D0
+      end if
+
+      ! Write (6, *) '---------------------------------------------'
+      ! Write (6, *) 'omega:', omega
+      ! Write (6, *) 'Density rho:', rho
+      ! Write (6, *) 'Compressional Wave Speed cp:', cp
+      ! Write (6, *) 'Attenuation attp:', attp
+      ! Write (6, *) 'Shear Wave Speed cs:', cs
+      ! Write (6, *) 'Attenuation atts:', atts
+
+      ! Write (6, *) 'Shear Modulus mu:', mu
+      ! Write (6, *) 'Longitudinal Modulus:', LongM
+
       CALL CheckModuli(LongM, mu)
       IF (has_error) RETURN
 
@@ -430,10 +461,10 @@ CONTAINS
 
       xi = xi0
 
-      ! Write (6,*) 'xi:', xi
-      ! Write (6,*) 'xi2:', xi**2
-      ! Write (6,*) 's:', s
-      ! Write (6,*) 's2:', s**2
+      ! Write (6, *) 'xi:', xi
+      ! Write (6, *) 'xi2:', xi**2
+      ! Write (6, *) 's:', s
+      ! Write (6, *) 's2:', s**2
 
       ! Last medium (n+1) properties
 
@@ -444,11 +475,18 @@ CONTAINS
       cpsq = LongM/rho
       cssq = mu/rho
 
+      Write (6, *) 'cpsq:', cpsq
+      Write (6, *) 'cssq:', cssq
+
       ! Equation (8)
       h = Sqrt(s**2/cpsq - xi**2)
       CALL Physical(h)
+
+      Write (6, *) 'h:', h
+
       k = Sqrt(s**2/cssq - xi**2)
       CALL Physical(k)
+      Write (6, *) 'k:', k
 
       qpn = Dreal(i*rho*Conjg(h))        ! Equation (42), Energy coefficients
       qsn = Dreal(i*rho*Conjg(k))        ! Equation (42), Energy coefficients
@@ -468,6 +506,18 @@ CONTAINS
       a(4, 1) = -gamma
       a(4, 2) = -twomuxi*h
 
+      ! Write (6, *) '--------------------------------------------------------------------'
+      ! Write (6, *) 'i, j, a(i,j):'
+      ! m = 1
+      ! Do While (m .le. 3)
+      !    ii = 1
+      !    Do While (ii .le. 2)
+      !       Write (6, *) m, ii, a(m, ii)
+      !       ii = ii + 1
+      !    End Do
+      !    m = m + 1
+      ! End Do
+
       ! Set up c[last] [equation(63)]
       c(1) = hk + xi**2
       c(2) = -rhos2*k
@@ -476,27 +526,19 @@ CONTAINS
       c(5) = rhos2*h
       c(6) = -twomuxi**2*hk - gamma**2
 
-      ! Write (6,*) 'i, j, an1(i,j):'
-      ! m = 1
-      ! Do While (m.le.4)
-      !   Write (6,*) m,1,a(m,1)
-      !   Write (6,*) m,2,a(m,2)
-      !   m = m + 1
-      ! End Do
-
-      ! Write (6,*) 'cn1(1):', c(1)
-      ! Write (6,*) 'cn1(2):', c(2)
-      ! Write (6,*) 'cn1(3):', c(3)
-      ! Write (6,*) 'cn1(4):', c(4)
-      ! Write (6,*) 'cn1(5):', c(5)
-      ! Write (6,*) 'cn1(6):', c(6)
+      Write (6, *) 'c(1):', c(1)
+      Write (6, *) 'c(2):', c(2)
+      Write (6, *) 'c(3):', c(3)
+      Write (6, *) 'c(4):', c(4)
+      Write (6, *) 'c(5):', c(5)
+      Write (6, *) 'c(6):', c(6)
 
       medium = last - 1
       Do While (medium .ge. 1) ! Begin *Medium* loop
 
          rho = density(medium)
          dd = thick(medium)
-         call LayerPhysical(rho, omega, cp(last), attp(last), vLongM(last), cs(last), atts(last), vmu(last), LongM, mu)
+         call LayerPhysical(rho, omega, cp(medium), attp(medium), vLongM(medium), cs(medium), atts(medium), vmu(medium), LongM, mu)
          IF (has_error) RETURN
 
          ! cp is the long phase speed: cp^2 = (lambda + 2*mu)/rho
@@ -548,29 +590,29 @@ CONTAINS
          ! consistent with it).
          amax = 1D0
 
-         ! Write (6,*) medium, ' rhos2:', rhos2
-         ! Write (6,*) medium, ' h:', h
-         ! Write (6,*) medium, ' k:', k
-         ! Write (6,*) medium, ' eta:', eta
-         ! Write (6,*) medium, ' nu2:', nu2
-         ! Write (6,*) medium, ' nu:', nu
-         ! Write (6,*) medium, ' nunu1:', nunu1
-         ! Write (6,*) medium, ' nu1:', nu1
-         ! Write (6,*) medium, ' nu12:', nu12
-         ! Write (6,*) medium, ' nu1t:', nu1t
-         ! Write (6,*) medium, ' fnorm:', fnorm
-         ! Write (6,*) medium, ' shrh:', shrh
-         ! Write (6,*) medium, ' ch:', ch
-         ! Write (6,*) medium, ' sh:', sh
-         ! Write (6,*) medium, ' rh:', rh
-         ! Write (6,*) medium, ' ck:', ck
-         ! Write (6,*) medium, ' sk:', sk
-         ! Write (6,*) medium, ' skrk:', skrk
-         ! Write (6,*) medium, ' rk:', rk
-         ! Write (6,*) medium, ' rhrk:', rhrk
-         ! Write (6,*) medium, ' chck:', chck
-         ! Write (6,*) medium, ' chck1:', chck1
-         ! Write (6,*) medium, ' shsk:', shsk
+         ! Write (6, *) medium, ' rhos2:', rhos2
+         ! Write (6, *) medium, ' h:', h
+         ! Write (6, *) medium, ' k:', k
+         ! Write (6, *) medium, ' eta:', eta
+         ! Write (6, *) medium, ' nu2:', nu2
+         ! Write (6, *) medium, ' nu:', nu
+         ! Write (6, *) medium, ' nunu1:', nunu1
+         ! Write (6, *) medium, ' nu1:', nu1
+         ! Write (6, *) medium, ' nu12:', nu12
+         ! Write (6, *) medium, ' nu1t:', nu1t
+         ! Write (6, *) medium, ' fnorm:', fnorm
+         ! Write (6, *) medium, ' shrh:', shrh
+         ! Write (6, *) medium, ' ch:', ch
+         ! Write (6, *) medium, ' sh:', sh
+         ! Write (6, *) medium, ' rh:', rh
+         ! Write (6, *) medium, ' ck:', ck
+         ! Write (6, *) medium, ' sk:', sk
+         ! Write (6, *) medium, ' skrk:', skrk
+         ! Write (6, *) medium, ' rk:', rk
+         ! Write (6, *) medium, ' rhrk:', rhrk
+         ! Write (6, *) medium, ' chck:', chck
+         ! Write (6, *) medium, ' chck1:', chck1
+         ! Write (6, *) medium, ' shsk:', shsk
 
          ! Set up B[med]
 
@@ -591,16 +633,16 @@ CONTAINS
          B(4, 3) = B(2, 1)
          B(4, 4) = B(1, 1)
 
-         ! Write (6,*) '  i, j, B(i,j):'
-         ! m = 1
-         ! Do While (m.le.4)
-         !   ii = 1
-         !   Do While (ii.le.4)
-         !     Write (6,*) m,ii,B(m,ii)
-         !     ii = ii + 1
-         !   End Do
-         !   m = m + 1
-         ! End Do
+         Write (6, *) '  i, j, B(i,j):'
+         m = 1
+         Do While (m .le. 4)
+            ii = 1
+            Do While (ii .le. 4)
+               Write (6, *) m, ii, B(m, ii)
+               ii = ii + 1
+            End Do
+            m = m + 1
+         End Do
 
          ! Multiply B[med] by B[med+1]*B[med+2]*...*B[last-1]*a[last]
          ! using atemp[]
@@ -677,15 +719,15 @@ CONTAINS
          D(6, 5) = D(2, 1)
          D(6, 6) = D(1, 1)
 
-         ! Write (6,*) 'i, j, D(i,j):'
+         ! Write (6, *) 'i, j, D(i,j):'
          ! m = 1
-         ! Do While (m.le.6)
-         !   ii = 1
-         !   Do While (ii.le.6)
-         !     Write (6,*) m,ii,D(m,ii)
-         !     ii = ii + 1
-         !   End Do
-         !   m = m + 1
+         ! Do While (m .le. 6)
+         !    ii = 1
+         !    Do While (ii .le. 6)
+         !       Write (6, *) m, ii, D(m, ii)
+         !       ii = ii + 1
+         !    End Do
+         !    m = m + 1
          ! End Do
 
          ! Multiply D[med] by D[med+1]*D[med+2]*...*D[last-1]*c[last]
@@ -747,26 +789,26 @@ CONTAINS
       xigammahk = xi*gammahk
       gamma2hk = gamma*gammahk
 
-      ! Write (6,*) 'qp0:', qp0
-      ! Write (6,*) 'qs0:', qs0
-      ! Write (6,*) 'h 0:', h
-      ! Write (6,*) 'rhos2 0:', rhos2
-      ! Write (6,*) 'mu 0:', mu
-      ! Write (6,*) 'k 0:', k
-      ! Write (6,*) 'gamma 0:', gamma
-      ! Write (6,*) 'twomuxi 0:', twomuxi
-      ! Write (6,*) 'hk 0:', hk
-      ! Write (6,*) 'rhos2h 0:', rhos2h
-      ! Write (6,*) 'rhos2k 0:', rhos2k
-      ! Write (6,*) 'xik 0:', xik
-      ! Write (6,*) 'gammak 0:', gammak
-      ! Write (6,*) 'gammah 0:', gamma/h
-      ! Write (6,*) 'gammahk 0:', gammahk
-      ! Write (6,*) 'twomuxi2 0:', twomuxi2
-      ! Write (6,*) 'xih 0:', xih
-      ! Write (6,*) 'xigammahk 0:', xigammahk
-      ! Write (6,*) 'gamma2hk 0:', gamma2hk
-      ! Write (6,*) 'xi2hk 0:', xi2hk
+      ! Write (6, *) 'qp0:', qp0
+      ! Write (6, *) 'qs0:', qs0
+      ! Write (6, *) 'h 0:', h
+      ! Write (6, *) 'rhos2 0:', rhos2
+      ! Write (6, *) 'mu 0:', mu
+      ! Write (6, *) 'k 0:', k
+      ! Write (6, *) 'gamma 0:', gamma
+      ! Write (6, *) 'twomuxi 0:', twomuxi
+      ! Write (6, *) 'hk 0:', hk
+      ! Write (6, *) 'rhos2h 0:', rhos2h
+      ! Write (6, *) 'rhos2k 0:', rhos2k
+      ! Write (6, *) 'xik 0:', xik
+      ! Write (6, *) 'gammak 0:', gammak
+      ! Write (6, *) 'gammah 0:', gamma/h
+      ! Write (6, *) 'gammahk 0:', gammahk
+      ! Write (6, *) 'twomuxi2 0:', twomuxi2
+      ! Write (6, *) 'xih 0:', xih
+      ! Write (6, *) 'xigammahk 0:', xigammahk
+      ! Write (6, *) 'gamma2hk 0:', gamma2hk
+      ! Write (6, *) 'xi2hk 0:', xi2hk
 
       If (isComp) Then ! P wave input
 
@@ -827,21 +869,39 @@ CONTAINS
 
       End If
 
-      ! Write (6,*) 'a0(1):', a0(1)
-      ! Write (6,*) 'a0(2):', a0(2)
-      ! Write (6,*) 'a0(3):', a0(3)
-      ! Write (6,*) 'a0(4):', a0(4)
+      ! Write (6, *) 'a0(1):', a0(1)
+      ! Write (6, *) 'a0(2):', a0(2)
+      ! Write (6, *) 'a0(3):', a0(3)
+      ! Write (6, *) 'a0(4):', a0(4)
 
-      ! Write (6,*) 'i, j, c0(i,j):'
+      ! Write (6, *) 'i, j, a(i,j):'
       ! m = 1
-      ! Do While (m.le.3)
-      !   ii = 1
-      !   Do While (ii.le.6)
-      !     Write (6,*) m,ii,c0(m,ii)
-      !     ii = ii + 1
-      !   End Do
-      !   m = m + 1
+      ! Do While (m .le. 3)
+      !    ii = 1
+      !    Do While (ii .le. 2)
+      !       Write (6, *) m, ii, a(m, ii)
+      !       ii = ii + 1
+      !    End Do
+      !    m = m + 1
       ! End Do
+
+      ! Write (6, *) 'i, j, c0(i,j):'
+      ! m = 1
+      ! Do While (m .le. 3)
+      !    ii = 1
+      !    Do While (ii .le. 6)
+      !       Write (6, *) m, ii, c0(m, ii)
+      !       ii = ii + 1
+      !    End Do
+      !    m = m + 1
+      ! End Do
+
+      ! Write (6, *) 'c(1):', c(1)
+      ! Write (6, *) 'c(2):', c(2)
+      ! Write (6, *) 'c(3):', c(3)
+      ! Write (6, *) 'c(4):', c(4)
+      ! Write (6, *) 'c(5):', c(5)
+      ! Write (6, *) 'c(6):', c(6)
 
       ! Multiply a0 by B[1]*B[2]*...*B[last-1]*a[last] to give g [eq(62)]
       g(1) = a0(1)*a(1, 1) + a0(2)*a(2, 1) + a0(3)*a(3, 1) + a0(4)*a(4, 1)
