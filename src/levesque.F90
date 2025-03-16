@@ -100,8 +100,6 @@ CONTAINS
       integer :: i, numLayers, numCalcs
       real(kind=8) :: cosinc, omega
 
-      PRINT *, 'Test 1'
-
       if (size(freq) > 1 .and. size(angle) > 1) then
          call set_error(2, 'There can only be a vector of either angle or frequency the over variable is a scaler.')
          return
@@ -180,8 +178,6 @@ CONTAINS
          return
       end if
 
-      PRINT *, 'Test 2'
-
       !ALLOCATE (rp(numCalcs), tp(numCalcs), rs(numCalcs), ts(numCalcs))
       !ALLOCATE (RpE(numCalcs), TpE(numCalcs), RsE(numCalcs), TsE(numCalcs))
 
@@ -217,8 +213,8 @@ CONTAINS
       REAL(KIND=8), INTENT(IN) :: rho, c, atten, omega
       COMPLEX(KIND=8) :: WaveToModulus
 
-      ! WaveToModulus = rho/(1/c - (atten/omega)*dBtoNp*imagI)**2
-      WaveToModulus = rho/complex(1D0/c, -(atten/omega))**2
+      ! WaveToModulus = rho/(1/c - (atten/omega)*imagI)**2
+      WaveToModulus = rho/complex(1D0/c, -(dBtoNp*atten/omega))**2
 
       IF (real(WaveToModulus) .lt. 0D0) THEN
          call set_error(3, 'The real component of the modulus is negative')
@@ -311,6 +307,10 @@ CONTAINS
       complex(KIND=8), INTENT(in) :: iLongM, imu
       COMPLEX(KIND=8), INTENT(OUT) :: LongM, mu
 
+      real(kind=8) :: error
+
+      error = 1e3
+
       if (cs .gt. 0D0) then
          mu = WaveToModulus(rho, cs, atts, omega)
          IF (has_error) RETURN
@@ -320,11 +320,11 @@ CONTAINS
 
       ! If the modulus real or imag is zero set it equal to a minimal value for numberical stability.
       if (AIMAG(mu) .lt. 1D0) then
-         mu = mu + eps*imagI
+         mu = mu + error*imagI
       end if
 
       if (REAL(mu) .lt. 1D0) then
-         mu = mu + eps*1D0
+         mu = mu + error*1D0
       end if
 
       if (cp .gt. 0D0) then
@@ -336,11 +336,11 @@ CONTAINS
 
       ! If the modulus real or imag is zero set it equal to a minimal value for numberical stability.
       if (AIMAG(LongM) .lt. 1) then
-         LongM = LongM + eps*2*imagI
+         LongM = LongM + error*2*imagI
       end if
 
       if (REAL(LongM) .lt. 1) then
-         LongM = LongM + eps*1D0
+         LongM = LongM + error*1D0
       end if
 
       ! Write (6, *) '---------------------------------------------'
@@ -381,25 +381,28 @@ CONTAINS
 
       COMPLEX(KIND=8) :: g(2), a0(4), B(4, 4), a(4, 2), atemp(4, 2)
       COMPLEX(KIND=8) :: j(3), c0(3, 6), D(6, 6), c(6), ctemp(6)
-      COMPLEX(KIND=8) :: i, s, k, h, cpsq, cp0sq, xi, xi0, &
-                         gamma, eta, nu, nu1, nu2, rhos2, ch, sh, ck, sk, hk, &
+      COMPLEX(KIND=8) :: z, i, s, k, h, cpsq, cp0sq, xi, xi0, &
+                         gamma, eta, eta2, nu, nu1, nu2, rhos2, ch, sh, ck, sk, hk, &
                          nu1t, nu12, chck, chck1, shsk, cssq, rh, rk, twomuxi, &
                          twomuxi2, xik, xih, gammak, gammahk, xigammahk, &
                          gammah, cs0sq, rhos2h, rhos2k, gamma2hk, cp0, cs0, &
                          LongM, LongM0, mu, mu0, shrh, skrk, rhrk, &
-                         nunu1, xi2hk
+                         nunu1, xi2hk, chss, shss, ckss, skss
+      REAL(KIND=8)  :: hlns, klns, us, tempreal, dmax, bdmax, emin
 
-      i = (0D0, 1D0)
+      i = complex(0, 1)
+      emin = -709
 
       last = size(density)
 
+      theta0 = acos(cosinc)
+      ! Incidence angle theta should not be exactly zero with this algorithm
+      thetamin = eps
+      theta0 = max(theta0, thetamin)
       ! theta should not be exactly zero with this algorithm
-      thetamin = 1D-5
+      thetamin = eps
       thetamax = halfpi*0.999999D0
-      theta0 = ACOS(cosinc)
-      If (theta0 .lt. thetamin) theta0 = thetamin
-      ! Angles close to 90 degrees can cause problems occasionally
-      If (theta0 .gt. thetamax) theta0 = thetamax
+      theta0 = min(theta0, thetamax)
 
       ! s is the Laplace transform variable corresponding to t
       !   For frequency omega, s=i*omega
@@ -475,18 +478,12 @@ CONTAINS
       cpsq = LongM/rho
       cssq = mu/rho
 
-      Write (6, *) 'cpsq:', cpsq
-      Write (6, *) 'cssq:', cssq
-
       ! Equation (8)
       h = Sqrt(s**2/cpsq - xi**2)
       CALL Physical(h)
 
-      Write (6, *) 'h:', h
-
       k = Sqrt(s**2/cssq - xi**2)
       CALL Physical(k)
-      Write (6, *) 'k:', k
 
       qpn = Dreal(i*rho*Conjg(h))        ! Equation (42), Energy coefficients
       qsn = Dreal(i*rho*Conjg(k))        ! Equation (42), Energy coefficients
@@ -526,12 +523,12 @@ CONTAINS
       c(5) = rhos2*h
       c(6) = -twomuxi**2*hk - gamma**2
 
-      Write (6, *) 'c(1):', c(1)
-      Write (6, *) 'c(2):', c(2)
-      Write (6, *) 'c(3):', c(3)
-      Write (6, *) 'c(4):', c(4)
-      Write (6, *) 'c(5):', c(5)
-      Write (6, *) 'c(6):', c(6)
+      ! Write (6, *) 'c(1):', c(1)
+      ! Write (6, *) 'c(2):', c(2)
+      ! Write (6, *) 'c(3):', c(3)
+      ! Write (6, *) 'c(4):', c(4)
+      ! Write (6, *) 'c(5):', c(5)
+      ! Write (6, *) 'c(6):', c(6)
 
       medium = last - 1
       Do While (medium .ge. 1) ! Begin *Medium* loop
@@ -555,64 +552,70 @@ CONTAINS
          ! Defined quantities in APPENDIX (and some from main text):
 
          rhos2 = rho*s**2
-         gamma = rhos2 - 2D0*mu*xi**2        ! Equation (27)
+
+         ! gamma is related to the propagation angle within the layer
+         ! and is not explicitly used here. Commented out.
+         ! gamma = rhos2 - 2D0*mu*xi**2        ! Equation (27)
 
          nu = 2D0*mu*xi**2/rhos2
          eta = rhos2/xi
-
-         ch = (Exp(-h*dd) + Exp(h*dd))/2D0        ! Cosh(-h*dd)
-         ck = (Exp(-k*dd) + Exp(k*dd))/2D0        ! Cosh(-k*dd)
-
-         sh = xi*(Exp(-h*dd) - Exp(h*dd))/(2D0*h)        ! (xi/h)Sinh(-h*dd)
-         sk = xi*(Exp(-k*dd) - Exp(k*dd))/(2D0*k)        ! (xi/k)Sinh(-k*dd)
+         eta2 = eta**2
+         nu2 = nu**2
+         nu1 = 1D0 - nu
+         nunu1 = nu*nu1
+         nu1t = 1D0 - 2D0*nu
+         nu12 = nu1**2
 
          rh = (h/xi)**2
          rk = (k/xi)**2
 
-         nu2 = nu**2                        ! nu^2
-         nu1 = 1D0 - nu                        ! 1 - nu
-         nunu1 = nu*nu1                        ! nu(1-nu)
-         nu1t = 1D0 - 2D0*nu                ! 1-2nu
-         nu12 = nu1**2                        ! (1-nu)^2
-         chck = ch*ck                        ! c_h c_k
-         chck1 = 1D0 - chck                ! 1 - c_h c_k
-         shsk = sh*sk                        ! s_h s_k
+         rhrk = rh*rk
+
+         ! Scaling cosh & sinh to avoid overflow/underflow
+         ! using David Bartel's algorithm
+         z = -h*dd
+         call set_scaled_cosh_sinh(z, chss, shss, hlns)
+         z = -k*dd
+         call set_scaled_cosh_sinh(z, ckss, skss, klns)
+         ! Matrix B contains single cosh & sinh factors.
+         ! Scaled terms also need the complementary exp() factor
+         ! applied
+
+         ck = 0
+         sk = 0
+         if (-hlns >= emin) then
+            tempreal = exp(-hlns)
+            ck = tempreal*ckss
+            sk = tempreal*skss*xi/k
+         end if
+
+         ch = 0
+         sh = 0
+         if (-klns >= emin) then
+            tempreal = exp(-klns)
+            ch = tempreal*chss
+            sh = tempreal*shss*xi/h
+         end if
+
+         ! Valid products for scaled B only (redone for D below)
          shrh = sh*rh                        ! s_h r_h
          skrk = sk*rk                        ! s_k r_k
-         rhrk = rh*rk                        ! r_h r_k
 
-         fnorm = Abs(Exp(-h*dd))
+         ! Unscaled cosh & sinh (Original)
+         ! Not used for scaled cosh & sinh
+         !
+         ! ch = (Exp(-h*dd) + Exp(h*dd))/2D0        ! Cosh(-h*dd)
+         ! ck = (Exp(-k*dd) + Exp(k*dd))/2D0        ! Cosh(-k*dd)
+         ! sh = xi*(Exp(-h*dd)-Exp(h*dd))/(2D0*h)        ! (xi/h)Sinh(-h*dd)
+         ! sk = xi*(Exp(-k*dd)-Exp(k*dd))/(2D0*k)        ! (xi/k)Sinh(-k*dd)
+
+         fnorm = 1
 
          ! fnorm seems to be insufficient? I use the following to minimize
          ! large numbers only, otherwise use 1D0.  But note that amax is
          ! divided into array values so can conceivably cause overflow
          ! itself if 1D0 is used. Not part of L & P's procedure (but fully
          ! consistent with it).
-         amax = 1D0
-
-         ! Write (6, *) medium, ' rhos2:', rhos2
-         ! Write (6, *) medium, ' h:', h
-         ! Write (6, *) medium, ' k:', k
-         ! Write (6, *) medium, ' eta:', eta
-         ! Write (6, *) medium, ' nu2:', nu2
-         ! Write (6, *) medium, ' nu:', nu
-         ! Write (6, *) medium, ' nunu1:', nunu1
-         ! Write (6, *) medium, ' nu1:', nu1
-         ! Write (6, *) medium, ' nu12:', nu12
-         ! Write (6, *) medium, ' nu1t:', nu1t
-         ! Write (6, *) medium, ' fnorm:', fnorm
-         ! Write (6, *) medium, ' shrh:', shrh
-         ! Write (6, *) medium, ' ch:', ch
-         ! Write (6, *) medium, ' sh:', sh
-         ! Write (6, *) medium, ' rh:', rh
-         ! Write (6, *) medium, ' ck:', ck
-         ! Write (6, *) medium, ' sk:', sk
-         ! Write (6, *) medium, ' skrk:', skrk
-         ! Write (6, *) medium, ' rk:', rk
-         ! Write (6, *) medium, ' rhrk:', rhrk
-         ! Write (6, *) medium, ' chck:', chck
-         ! Write (6, *) medium, ' chck1:', chck1
-         ! Write (6, *) medium, ' shsk:', shsk
 
          ! Set up B[med]
 
@@ -633,61 +636,40 @@ CONTAINS
          B(4, 3) = B(2, 1)
          B(4, 4) = B(1, 1)
 
-         Write (6, *) '  i, j, B(i,j):'
-         m = 1
-         Do While (m .le. 4)
-            ii = 1
-            Do While (ii .le. 4)
-               Write (6, *) m, ii, B(m, ii)
-               ii = ii + 1
-            End Do
-            m = m + 1
-         End Do
+         bdmax = maxval(abs(B))
 
-         ! Multiply B[med] by B[med+1]*B[med+2]*...*B[last-1]*a[last]
-         ! using atemp[]
-         m = 1
-         Do While (m .le. 4)
-            n = 1
-            Do While (n .le. 2)
-               atemp(m, n) = 0D0
-               ii = 1
-               Do While (ii .le. 4)
-                  atemp(m, n) = atemp(m, n) + B(m, ii)*a(ii, n)
-                  ii = ii + 1
-               End Do
-               atemp(m, n) = fnorm*atemp(m, n)
-               ! For large numbers of liquids with b=0 (1D-50 here) I
-               ! find that atemp() and ctemp() can increase to cause
-               ! overflow despite the above normalization.  Here, I
-               ! evaluate another factor, which must be applied to both
-               ! a() and c().
-               amax = max(abs(atemp(m, n)), amax)
-               n = n + 1
-            End Do
-            m = m + 1
-         End Do
+         us = 0
+         if (-hlns >= emin) then
+            us = exp(-hlns)
+         end if
+         if (-klns >= emin) then
+            us = us*exp(-klns)
+         end if
+         if (-klns < emin) then
+            us = 0
+         end if
 
-         ! Return atemp[] to a[]
-         m = 1
-         Do While (m .le. 4)
-            n = 1
-            Do While (n .le. 2)
-               ! Normalize again; see above
-               a(m, n) = atemp(m, n)/amax
-               n = n + 1
-            End Do
-            m = m + 1
-         End Do
+         ! Valid values for scaled D only (done for B above)
+         ck = ckss
+         sk = skss*xi/k
+         ch = chss
+         sh = shss*xi/h
+
+         shsk = sh*sk                        ! s_h s_k
+         chck = ch*ck                        ! c_h c_k
+         chck1 = us - chck    ! us - c_h c_k NB: us is 1D0 scaled
+
+         ! Valid products for scaled D only (done for B above)
+         shrh = sh*rh                        ! s_h r_h
+         skrk = sk*rk                        ! s_k r_k
 
          ! Set up D[med]
-
          D(1, 1) = chck + 2D0*nunu1*chck1 + (nu12 + nu2*rhrk)*shsk
          D(1, 2) = (ch*sk + ck*shrh)/eta
          D(1, 3) = (nu1t*chck1 - (nu1 - nu*rhrk)*shsk)/eta
          D(1, 4) = D(1, 3)
          D(1, 5) = -(ch*skrk + ck*sh)/eta
-         D(1, 6) = (2D0*chck1 - shsk*(1D0 + rhrk))/(eta**2)
+         D(1, 6) = (2D0*chck1 - shsk*(1D0 + rhrk))/eta2
          D(2, 1) = eta*(nu12*ck*sh + nu2*ch*skrk)
          D(2, 2) = chck
          D(2, 3) = nu*ch*skrk - nu1*ck*sh
@@ -696,8 +678,8 @@ CONTAINS
          D(2, 6) = D(1, 5)
          D(3, 1) = eta*(nunu1*nu1t*chck1 + (nu1*nu12 - nu*nu2*rhrk)*shsk)
          D(3, 2) = nu1*ch*sk - nu*ck*shrh
-         D(3, 4) = D(2, 2) - D(1, 1)
-         D(3, 3) = D(3, 4) + 1D0
+         D(3, 3) = D(2, 2) - D(1, 1) + us
+         D(3, 4) = D(3, 4) - D(1, 1)
          D(3, 5) = D(2, 4)
          D(3, 6) = D(1, 4)
          D(4, 1) = D(3, 1)
@@ -712,45 +694,67 @@ CONTAINS
          D(5, 4) = D(3, 2)
          D(5, 5) = D(2, 2)
          D(5, 6) = D(1, 2)
-         D(6, 1) = eta**2*(2D0*nu2*nu12*chck1 - (nu2**2*rhrk + nu12**2)*shsk)
+         D(6, 1) = eta2*(2D0*nu2*nu12*chck1 - (nu2**2*rhrk + nu12**2)*shsk)
          D(6, 2) = D(5, 1)
          D(6, 3) = D(4, 1)
          D(6, 4) = D(3, 1)
          D(6, 5) = D(2, 1)
          D(6, 6) = D(1, 1)
 
-         ! Write (6, *) 'i, j, D(i,j):'
-         ! m = 1
-         ! Do While (m .le. 6)
-         !    ii = 1
-         !    Do While (ii .le. 6)
-         !       Write (6, *) m, ii, D(m, ii)
-         !       ii = ii + 1
-         !    End Do
-         !    m = m + 1
-         ! End Do
+         dmax = maxval(abs(D))
+         bdmax = max(bdmax, dmax)
+
+         ! Multiply B[med] by B[med+1]*B[med+2]*...*B[last-1]*a[last]
+         ! using atemp[]
+         do m = 1, 4
+            do n = 1, 2
+               atemp(m, n) = 0
+            end do
+         end do
+
+         m = 1
+         do while (m <= 4)
+            n = 1
+
+            do while (n <= 2)
+               ii = 1
+               do while (ii <= 4)
+                  atemp(m, n) = atemp(m, n) + (B(m, ii)/bdmax)*a(ii, n)
+                  ii = ii + 1
+               end do
+               atemp(m, n) = fnorm*atemp(m, n)
+               ! For large numbers of liquids with b=0 (1D-50 here) I find that
+               ! atemp() and ctemp() can increase to cause overflow despite
+               ! the above normalization.  Here, I evaluate another factor,
+               ! which must be applied to both a() and c().
+               n = n + 1
+            end do
+            m = m + 1
+         end do
+
+         amax = maxval(abs(atemp))
+
+         ! Return atemp[] to a[]
+         do m = 1, 4
+            do n = 1, 2
+               a(m, n) = atemp(m, n)/amax
+            end do
+         end do
 
          ! Multiply D[med] by D[med+1]*D[med+2]*...*D[last-1]*c[last]
          ! using ctemp[]
-         m = 1
-         Do While (m .le. 6)
-            ctemp(m) = 0D0
-            ii = 1
-            Do While (ii .le. 6)
-               ctemp(m) = ctemp(m) + D(m, ii)*c(ii)
-               ii = ii + 1
-            End Do
+         do m = 1, 6
+            ctemp(m) = 0
+            do ii = 1, 6
+               ctemp(m) = ctemp(m) + (D(m, ii)/bdmax)*c(ii)
+            end do
             ctemp(m) = fnorm*ctemp(m)
-            m = m + 1
-         End Do
+         end do
 
          ! Return ctemp[] to c[]
-         m = 1
-         Do While (m .le. 6)
-            ! Normalize c() again, as I did a(); see above
+         do m = 1, 6
             c(m) = ctemp(m)/amax
-            m = m + 1
-         End Do
+         end do
 
          medium = medium - 1
 
@@ -780,7 +784,8 @@ CONTAINS
       rhos2k = rhos2/k
       twomuxi = 2D0*mu*xi
       twomuxi2 = twomuxi**2
-      hk = h*k
+
+      ! hk = h*k
       xih = xi/h
       xik = xi/k
       xi2hk = xih*xik
@@ -788,27 +793,6 @@ CONTAINS
       gammahk = gammak/h
       xigammahk = xi*gammahk
       gamma2hk = gamma*gammahk
-
-      ! Write (6, *) 'qp0:', qp0
-      ! Write (6, *) 'qs0:', qs0
-      ! Write (6, *) 'h 0:', h
-      ! Write (6, *) 'rhos2 0:', rhos2
-      ! Write (6, *) 'mu 0:', mu
-      ! Write (6, *) 'k 0:', k
-      ! Write (6, *) 'gamma 0:', gamma
-      ! Write (6, *) 'twomuxi 0:', twomuxi
-      ! Write (6, *) 'hk 0:', hk
-      ! Write (6, *) 'rhos2h 0:', rhos2h
-      ! Write (6, *) 'rhos2k 0:', rhos2k
-      ! Write (6, *) 'xik 0:', xik
-      ! Write (6, *) 'gammak 0:', gammak
-      ! Write (6, *) 'gammah 0:', gamma/h
-      ! Write (6, *) 'gammahk 0:', gammahk
-      ! Write (6, *) 'twomuxi2 0:', twomuxi2
-      ! Write (6, *) 'xih 0:', xih
-      ! Write (6, *) 'xigammahk 0:', xigammahk
-      ! Write (6, *) 'gamma2hk 0:', gamma2hk
-      ! Write (6, *) 'xi2hk 0:', xi2hk
 
       If (isComp) Then ! P wave input
 
@@ -942,6 +926,82 @@ CONTAINS
 
       End If
 
+      rp = CONJG(rp)
+      rs = CONJG(rs)
+
+      tp = CONJG(tp)
+      ts = CONJG(ts)
+
    END SUBROUTINE RESPONSE
+
+   SUBROUTINE set_scaled_cosh_sinh(z, scaled_cosh, scaled_sinh, ln_scale)
+      IMPLICIT NONE
+      complex(kind=8), INTENT(IN) :: z
+      complex(kind=8), INTENT(OUT) :: scaled_cosh, scaled_sinh
+      REAL(kind=8), INTENT(OUT) :: ln_scale
+
+      REAL(kind=8) :: x, y, t, w, c, s, a, b, emin
+
+      ! Set real and imaginary parts of argument z of hyperbolic cosine
+      x = dreal(z)
+      y = dimag(z)
+
+      ! Set natural logarithm of scale factor
+      emin = -709.0d0
+      ln_scale = abs(x)
+      if (x < 0) then
+         ! Set exponent t = 2*x in exp(t) = exp(2*x)
+         t = 2*x
+         ! If exponent will cause an underflow then
+         if (t < emin) then
+            ! Use reduced formulae
+            c = cos(y)/2
+            s = sin(y)/2
+            ! Note that cmplx() uses the default real. dcmplx() forces
+            ! double precision. On VMS Digital fortran, /REAL_SIZE=64
+            ! would force cmplx() to return the required precision
+            scaled_cosh = complex(c, -s)
+            scaled_sinh = complex(-c, s)
+         else
+            ! Use full formulae
+            w = exp(t)
+            c = cos(y)/2
+            s = sin(y)/2
+            a = (w + 1)*c
+            b = (w - 1)*s
+            scaled_cosh = complex(a, b)
+            a = (w - 1)*c
+            b = (w + 1)*s
+            scaled_sinh = complex(a, b)
+         end if
+      else if (x == 0) then
+         ! Use reduced formulae
+         scaled_cosh = complex(cos(y), 0)
+         scaled_sinh = complex(0, real(sin(y)))
+      else if (x > 0) then
+         ! Set exponent t = -2*x in exp(-t) = exp(-2*x)
+         t = -2*x
+         ! If exponent will cause an underflow then
+         if (t < emin) then
+            ! Use reduced formulae
+            c = cos(y)/2
+            s = sin(y)/2
+            scaled_cosh = complex(c, s)
+            scaled_sinh = scaled_cosh
+         else
+            ! Use full formulae
+            w = exp(t)
+            c = cos(y)/2
+            s = sin(y)/2
+            a = (1 + w)*c
+            b = (1 - w)*s
+            scaled_cosh = complex(a, b)
+            a = (1 - w)*c
+            b = (1 + w)*s
+            scaled_sinh = complex(a, b)
+         end if
+      end if
+
+   end SUBROUTINE set_scaled_cosh_sinh
 
 END MODULE acoustic_sim
