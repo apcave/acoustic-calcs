@@ -122,11 +122,11 @@ CONTAINS
          CALL set_error(2, 'Angle values must be positive and less that 90 degrees')
       END IF
 
-      IF (ANY(freq <= 0.0)) THEN
+      IF (ANY(freq < 0.0)) THEN
          CALL set_error(2, 'Frequency values must be positive')
       END IF
 
-      IF (ANY(density <= 0.0)) THEN
+      IF (ANY(density < 0.0)) THEN
          CALL set_error(2, 'Density values must be positive')
       END IF
 
@@ -182,7 +182,7 @@ CONTAINS
       !ALLOCATE (RpE(numCalcs), TpE(numCalcs), RsE(numCalcs), TsE(numCalcs))
 
       DO i = 1, numCalcs
-         IF (size(freq) > 0) THEN
+         IF (size(freq) > 1) THEN
             cosinc = COS(angle(1)*radians)
             omega = freq(i)*twopi
          else
@@ -190,8 +190,31 @@ CONTAINS
             omega = freq(1)*twopi
          end if
 
-         call RESPONSE(isComp, cosinc, omega, density, thick, cp, cs, attp, atts, LongM, mu, &
-                       rp(i), tp(i), rs(i), ts(i), RpE(i), TpE(i), RsE(i), TsE(i))
+         if (omega == 0.0) then
+            if (isComp) Then
+               rp(i) = 0.0
+               rs(i) = 0.0
+               tp(i) = 1.0
+               ts(i) = 0.0
+               RsE(i) = 0.0
+               TsE(i) = 0.0
+               RpE(i) = 0.0
+               TpE(i) = 1.0
+            Else
+               rp(i) = 0.0
+               rs(i) = 0.0
+               tp(i) = 0.0
+               ts(i) = 1.0
+               RsE(i) = 0.0
+               TsE(i) = 1.0
+               RpE(i) = 0.0
+               TpE(i) = 0.0
+            End If
+         else
+
+            call RESPONSE(isComp, cosinc, omega, density, thick, cp, cs, attp, atts, LongM, mu, &
+                          rp(i), tp(i), rs(i), ts(i), RpE(i), TpE(i), RsE(i), TsE(i))
+         end if
 
          if (has_error) then
             ret_message = error_message

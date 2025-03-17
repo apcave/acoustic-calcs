@@ -1,13 +1,19 @@
 #!/bin/bash
-
-sudo apt install python3 python3-venv
-
+sudo rm -r venv
 # Create a virtual environment
 python3 -m venv venv
 
 # Activate the virtual environment
-echo "Run command to Active python enviroment"
+echo "Run the following command to activate the Python environment:"
 echo "source venv/bin/activate"
 
 # Install necessary packages
-pip install numpy
+source venv/bin/activate
+pip install numpy==1.21.4
+pip install matplotlib
+pip install fprettify
+pip install meson
+pip install black
+pip install flake8
+
+sudo brew install ninja

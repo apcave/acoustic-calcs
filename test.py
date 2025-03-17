@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 import levesque
@@ -5,7 +6,8 @@ import levesque
 
 
 
-def run_acoustic_simulation(isComp : bool, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu):
+
+def run_acoustic_simulation(is_comp: bool, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu):
     angle = np.array(angle, dtype=np.float64)
     freq = np.array(freq, dtype=np.float64)
     density = np.array(density, dtype=np.float64)
@@ -30,27 +32,28 @@ def run_acoustic_simulation(isComp : bool, angle, freq, density, thick, cp, attp
     RsE = np.empty(numCalcs, dtype=np.float64)
     TsE = np.empty(numCalcs, dtype=np.float64)
 
-    ret_code, ret_message = levesque.acoustic_sim.simulate_composite(isComp, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu, rp, tp, rs, ts,RpE, TpE, RsE, TsE)
+    ret_code, ret_message = levesque.acoustic_sim.simulate_composite(is_comp, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu, rp, tp, rs, ts,RpE, TpE, RsE, TsE)
 
 
-    print("Reflection coefficient (P-wave):", rp)
-    print("Transmission coefficient (P-wave):", tp)
+    print( "Reflection coefficient (P-wave):", rp )
+    print( "Transmission coefficient (P-wave):", tp)
 
     # Convert rp and tp to dB
     rp_db = 20 * np.log10(np.abs(rp))
     tp_db = 20 * np.log10(np.abs(tp))
 
-    # Plot the results
-    plt.figure(figsize=(10, 6))
-    plt.plot(freq, np.abs(rp), label='Reflection Coefficient (P-wave) in dB')
-    plt.plot(freq, np.abs(tp), label='Transmission Coefficient (P-wave) in dB')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Magnitude (dB)')
-    plt.title('Reflection and Transmission Coefficients vs Frequency')
-    plt.legend()
-    plt.ylim(-1,1)
-    plt.grid(True)
-    plt.show()
+    if (len(rp) > 10):
+        # Plot the results
+        plt.figure(figsize=(10, 6))
+        plt.plot(freq, np.abs(rp), label='Reflection Coefficient (P-wave) in abs(Rp)')
+        plt.plot(freq, np.abs(tp), label='Transmission Coefficient (P-wave) in abs(Tp)')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (abs)')
+        plt.title('Reflection and Transmission Coefficients vs Frequency')
+        plt.legend()
+        plt.ylim(0,1)
+        plt.grid(True)
+        plt.show()
 
     # Print the results
 
@@ -65,16 +68,17 @@ def run_acoustic_simulation(isComp : bool, angle, freq, density, thick, cp, attp
 
 def water_steel_water_test():
     # Water steel water.
+    eps = 2.2204e-16
     isComp = True
-    angle = [45]
-    freq = np.linspace(0, 4000, 100)
+    angle = [40]
+    freq = np.linspace(0, 20e3, 101)
     density = [1000, 7850, 1000]
-    thick = [0, 0.1, 0]
+    thick = [0, 0.2, 0]
     cp = [1500, 5960, 1500]
-    attp = [0, 0, 0]
+    attp = [eps, eps, eps]
     LongM = [0, 0, 0]
-    cs = [0, 3235, 0]
-    atts = [0, 0, 0]
+    cs = [eps, 3235, eps]
+    atts = [eps, eps, eps]
     mu = [0,0,0]
     run_acoustic_simulation(isComp, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu)
 
