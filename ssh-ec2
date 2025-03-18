@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -i ~/.ssh/acoustic-calcs admin@ec2-3-27-46-83.ap-southeast-2.compute.amazonaws.com
