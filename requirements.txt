@@ -6,3 +6,4 @@ gunicorn
 python-dotenv
 dotenv
 uwsgi
+flake8
