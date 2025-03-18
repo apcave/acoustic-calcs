@@ -42,10 +42,28 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Test
-        run: docker compose run --rm acoustic sh -c "python manage.py wait_for_db && python manage.py test"
+        run: docker run --rm \
+          -e DB_HOST=${{ secrets.DB_HOST }} \
+          -e DB_NAME=${{ secrets.DB_NAME }} \
+          -e DB_USER=${{ secrets.DB_USER }} \
+          -e DB_PASS=${{ secrets.DB_PASS }} \
+          -e DB_PORT=${{ secrets.DB_PORT }} \
+          -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} \
+          -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} \
+          -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} \
+          ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "python manage.py wait_for_db && python manage.py test"
       - name: Lint
-        run: docker compose run --rm acoustic sh -c "flake8"
+        run: docker run --rm \
+          -e DB_HOST=${{ secrets.DB_HOST }} \
+          -e DB_NAME=${{ secrets.DB_NAME }} \
+          -e DB_USER=${{ secrets.DB_USER }} \
+          -e DB_PASS=${{ secrets.DB_PASS }} \
+          -e DB_PORT=${{ secrets.DB_PORT }} \
+          -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} \
+          -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} \
+          -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} \
+          ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "flake8"
+
 
   deploy:
     runs-on: ubuntu-latest
