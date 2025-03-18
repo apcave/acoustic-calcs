@@ -49,5 +49,5 @@ GRANT ALL PRIVILEGES ON SCHEMA public TO acoustic;
 EOF
 
 PGPASSWORD=FzAydWhDIgUzLrrlqJBq psql -h acoustic.cx682uusurxl.ap-southeast-2.rds.amazonaws.com -U postgres << EOF
-ALTER USER acoustic WITH PASSWORD '!YouNever74890';
+ALTER USER acoustic CREATEDB;
 EOF
