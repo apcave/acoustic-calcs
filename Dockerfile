@@ -12,18 +12,30 @@ WORKDIR /acoustic
 
 # Install dependencies
 COPY requirements.txt /acoustic/
-RUN apt-get update && apt-get install -y libpq-dev gcc nginx && rm -rf /var/lib/apt/lists/* \
-    && pip install --upgrade pip \
-    && pip install -r requirements.txt \
-    && pip install uwsgi \
-    && apt-get remove -y gcc && apt-get autoremove -y
+
+RUN apt-get update && \
+    apt-get install -y nginx python3-dev gcc && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y
+
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+RUN apt-get remove -y gcc python3-dev
+
+RUN  adduser --no-create-home django-user
+
 
 # Copy project
-COPY . /acoustic/
+COPY /acoustic/ /acoustic/
+RUN chown -R django-user:django-user /acoustic/staticfiles
+#USER django-user
 
 # Copy Nginx configuration
 COPY ./nginx/default /etc/nginx/sites-available/default
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled
+COPY ./nginx/default /etc/nginx/sites-enabled/default
+
+COPY ./scripts/run.sh .
 
 
 
@@ -31,4 +43,4 @@ RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled
 EXPOSE 80
 
 # Start Nginx and uWSGI
-CMD ["sh", "/scripts/run.sh"]
+CMD ["sh", "run.sh"]

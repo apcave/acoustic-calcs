@@ -42,8 +42,12 @@ python manage.py runserver 0.0.0.0:8000
 
 PGPASSWORD=FzAydWhDIgUzLrrlqJBq psql -h acoustic.cx682uusurxl.ap-southeast-2.rds.amazonaws.com -U postgres << EOF
 CREATE DATABASE acoustic_calcs;
-CREATE USER acoustic WITH PASSWORD '!YouNever74890&';
+CREATE USER acoustic WITH PASSWORD '!YouNever74890';
 GRANT ALL PRIVILEGES ON DATABASE acoustic_calcs TO acoustic;
 \c acoustic_calcs
 GRANT ALL PRIVILEGES ON SCHEMA public TO acoustic;
+EOF
+
+PGPASSWORD=FzAydWhDIgUzLrrlqJBq psql -h acoustic.cx682uusurxl.ap-southeast-2.rds.amazonaws.com -U postgres << EOF
+ALTER USER acoustic WITH PASSWORD '!YouNever74890';
 EOF

@@ -1,8 +1,11 @@
 #!/bin/bash
 source .env
 
+sudo docker stop acoustic
+sudo docker remove acoustic
 # Build the Docker image
-sudo docker build --no-cache -t acoustic .
+#sudo docker build --no-cache -t acoustic .
+sudo docker build -t acoustic .
 
 # Run the Docker container
 sudo docker run -d -p 80:80 \
@@ -18,3 +21,5 @@ sudo docker run -d -p 80:80 \
 
 # Check container logs
 sudo docker logs acoustic
+
+ss -tuln
