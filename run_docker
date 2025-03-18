@@ -1,0 +1,20 @@
+#!/bin/bash
+source .env
+
+# Build the Docker image
+sudo docker build --no-cache -t acoustic .
+
+# Run the Docker container
+sudo docker run -d -p 80:80 \
+    -e DB_HOST=$DB_HOST \
+    -e DB_NAME=$DB_NAME \
+    -e DB_USER=$DB_USER \
+    -e DB_PASS=$DB_PASS \
+    -e DB_PORT=$DB_PORT \
+    -e DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY \
+    -e DJANGO_DEBUG=$DJANGO_DEBUG \
+    -e DJANGO_ALLOWED_HOSTS=$DJANGO_ALLOWED_HOSTS \
+    --name acoustic acoustic
+
+# Check container logs
+sudo docker logs acoustic
