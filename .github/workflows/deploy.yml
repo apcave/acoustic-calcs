@@ -59,22 +59,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Copy SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Add SSH key to the agent
-        run: |
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no admin@ec2-3-27-46-83.ap-southeast-2.compute.amazonaws.com << 'EOF'
+          echo "${{ secrets.EC2_SSH_KEY }}" > acoustic-calcs.pem
+          chmod 400 acoustic-calcs.pem
+          ssh -i acoustic-calcs.pem admin@ec2-3-27-46-83.ap-southeast-2.compute.amazonaws.com << 'EOF'
             docker pull ${{ secrets.DOCKER_USERNAME }}/acoustic:latest
             docker stop acoustic || true
             docker rm acoustic || true
-            docker run -d -p 80:80 -e DB_HOST=${{ secrets.DB_HOST }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASS=${{ secrets.DB_PASS }} -e DB_PORT=${{ secrets.DB_PORT }} -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} --rm ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "python manage.py wait_for_db && python manage.py test"
+            docker run -d -p 80:80 -e DB_HOST=${{ secrets.DB_HOST }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASS=${{ secrets.DB_PASS }} -e DB_PORT=${{ secrets.DB_PORT }} -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} --rm ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest acoustic
           EOF
