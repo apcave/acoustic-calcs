@@ -27,7 +27,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: your-dockerhub-username/acoustic:latest
+          tags: docker push apcave/acoustic-calc:latest
 
   test-lint:
     name: Test and Lint
