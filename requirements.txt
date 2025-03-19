@@ -7,3 +7,4 @@ python-dotenv
 dotenv
 uwsgi
 flake8
+numpy
