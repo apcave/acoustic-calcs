@@ -1,9 +1,14 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
 import levesque
 
 
+def run_sim( model ):
+
+        # Run the model
+        model.run()
+        # Return the results
+        return model.results
 
 
 
@@ -38,22 +43,6 @@ def run_acoustic_simulation(is_comp: bool, angle, freq, density, thick, cp, attp
     print( "Reflection coefficient (P-wave):", rp )
     print( "Transmission coefficient (P-wave):", tp)
 
-    # Convert rp and tp to dB
-    rp_db = 20 * np.log10(np.abs(rp))
-    tp_db = 20 * np.log10(np.abs(tp))
-
-    if (len(rp) > 10):
-        # Plot the results
-        plt.figure(figsize=(10, 6))
-        plt.plot(freq, np.abs(rp), label='Reflection Coefficient (P-wave) in abs(Rp)')
-        plt.plot(freq, np.abs(tp), label='Transmission Coefficient (P-wave) in abs(Tp)')
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Magnitude (abs)')
-        plt.title('Reflection and Transmission Coefficients vs Frequency')
-        plt.legend()
-        plt.ylim(0,1)
-        plt.grid(True)
-        plt.show()
 
     # Print the results
 
