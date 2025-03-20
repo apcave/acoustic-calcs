@@ -93,6 +93,10 @@ def run_simulation(model):
 
     ret = run_acoustic_simulation(is_comp, angle, freq, density, thick,
                                   cp, attp, LongM, cs, atts, mu)
+    if ret['return_code'] != 0:
+        response = {'error': ret['return_message']}
+        return response
+
     model['results'] = ret
     # Return the results
     return model

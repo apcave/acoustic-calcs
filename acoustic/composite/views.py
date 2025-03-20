@@ -43,10 +43,13 @@ def run_model_endpoint(request):
     if not isinstance(data, dict):
         return Response({'error': 'Invalid JSON data'}, status=400)
 
-    # Recursively convert JSON strings to Python objects
-    data = convert_json_strings(data['data'])
+    try:
+        # Recursively convert JSON strings to Python objects
+        data = convert_json_strings(data['data'])
 
-    result = run_simulation(data)
+        result = run_simulation(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
 
     # Convert the result to a JSON string
     # result_json = json.dumps(result, indent=4)
