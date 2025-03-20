@@ -28,15 +28,6 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest
-          build-args: |
-            DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-            DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }}
-            DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASS=${{ secrets.DB_PASS }}
-            DB_PORT=${{ secrets.DB_PORT }}
 
   test-lint:
     name: Test and Lint
@@ -56,7 +47,7 @@ jobs:
         run: docker run --rm ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "flake8"
 
       - name: Test
-        run: docker run ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "python manage.py wait_for_db && python manage.py test"
+        run: docker run -e DB_HOST=${{ secrets.DB_HOST }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASS=${{ secrets.DB_PASS }} -e DB_PORT=${{ secrets.DB_PORT }} -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} --rm ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "python manage.py wait_for_db && python manage.py test"
 
   deploy:
     runs-on: ubuntu-latest
@@ -70,4 +61,4 @@ jobs:
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > acoustic.pem
           chmod 400 acoustic.pem
-          ssh -i acoustic.pem admin@3.104.75.129 -o StrictHostKeyChecking=no 'bash /home/admin/run_docker'
+          ssh -i acoustic.pem admin@3.104.75.129 'bash /home/admin/run_docker'
