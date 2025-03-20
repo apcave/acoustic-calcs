@@ -40,34 +40,42 @@ token_response=$(curl -X 'POST' \
   "password": "'$CALC_PASS'"
 }')
 
+#echo "Token response: $token_response"
+
 # Extract the token value from the response
-token=$(echo "$token_response" | jq -r '.token')
+access_token=$(echo "$token_response" | jq -r '.access')
 
 # Check if the token was successfully extracted
-if [ "$token" != "null" ]; then
-    echo "Token request successful. Token: $token"
+if [ "$access_token" != "null" ]; then
+    echo "Token request successful. Token: $access_token"
 else
     echo "Token request failed"
     exit 1
 fi
 
-curl -X 'GET' \
-  'http://127.0.0.1/api/user/me/' \
-#  -H "Authorization: Bearer $token" \
-  -H 'X-CSRFTOKEN: '$token \  
-  -H 'accept: application/json'
+echo "Testing an authenticated request, user details"
+user_details=$(curl -X 'GET' \
+  'http://'$HOSTNAME'/api/user/me/' \
+  -H "Authorization: Bearer $access_token" \
+  -H 'accept: application/json')
+echo "User details: $user_details"
 
-exit 0
+# Read the JSON payload from the file
+input_model=$(cat acoustic/composite/tests/modelPayload.json)
 
-TEST_MODEL=$(cat acoustic/composite/tests/modelPayload.json)
-echo "TEST_MODEL: $TEST_MODEL"
+# Prepare the JSON payload
+payload=$(jq -n --argjson data "$input_model" '{data: $data}')
 
-# Perform a GET request with data using the token
-echo curl -X 'POST' \
-    'http://'$HOSTNAME'/composite/' \
-    -H "Authorization: Bearer $token" \
+# Perform a POST request with the access token and JSON payload
+sim_result=$(curl -s -X POST \
+    'http://'$HOSTNAME'/api/composite/' \
+    -H "Authorization: Bearer $access_token" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
-    -d "'$TEST_MODEL'" 
+    -d "$payload")
 
-fe1fa15dd9818abbffa8bba449e93a2fdb065b68
+# echo "Simulation result: $sim_result"
+input_results=$(cat acoustic/composite/tests/resultsPayload.json)
+
+python acoustic/composite/utils/compare_json.py "$input_results" "$sim_result" --tolerance 1e-9
+

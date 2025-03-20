@@ -1,11 +1,14 @@
 #!/bin/bash
 source .env
 
-# Stop all running Docker containers
-sudo docker stop $(sudo docker ps -q)
-#sudo docker stop acoustic
+running_containers=$(sudo docker ps -q)
+if [ -n "$running_containers" ]; then
+    echo "Stopping all running Docker containers"
+    sudo docker stop $running_containers
+    sudo docker remove $running_containers
+fi
 
-sudo docker remove acoustic
+sudo remove acoustic
 # Build the Docker image
 #sudo docker build --no-cache -t acoustic .
 sudo docker build -t acoustic .
