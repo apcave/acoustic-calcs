@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-ls -lah
-pwd 
+#ls -lah
+#pwd 
 
 # echo DB_NAME=$DB_NAME
 # echo DB_USER=$DB_USER
@@ -29,10 +29,41 @@ python manage.py wait_for_db
 echo "Collecting static files"
 python manage.py collectstatic --noinput
 
-
 echo "Running migrations"
 python manage.py migrate
 
+# Do not run tests unless required as they slow the boot time.
+# echo "Running tests"
+# python manage.py test
+
 
 echo "Starting server"
-exec su -c "uwsgi --socket 127.0.0.1:8000 --workers 4 --master --enable-threads --module acoustic.wsgi" django-user
+# Note server runs in background
+exec su -c "uwsgi --socket 127.0.0.1:8000 --workers 4 --master --enable-threads --module acoustic.wsgi" django-user & 
+
+# Capture the PID of uwsgi
+UWSGI_PID=$!
+
+# Note the python server will not work with Nginx!
+# python manage.py runserver 127.0.0.1:8000 &
+
+# The curl command results shows in the logs "docker logs <container_id>"
+# Wait for the server to start
+sleep 4
+
+echo "Checking the internal ports are open."
+lsof -i -P -n | grep LISTEN
+
+
+service nginx status 
+
+echo "Checking the response from the re-routed Nginx server."
+response=$(curl -G http://0.0.0.0:80/api/health-check/)
+if echo "$response" | jq -e '.healthy == true' > /dev/null; then
+    echo "\e[32mNginx server is ok\e[0m"  # Green text
+else
+    echo "\e[31mNginx server failed\e[0m"  # Red text
+fi
+
+# Wait for the uwsgi process to complete
+wait $UWSGI_PID

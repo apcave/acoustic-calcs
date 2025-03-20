@@ -8,3 +8,4 @@ dotenv
 uwsgi
 flake8
 numpy
+meson

@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Set HOSTNAME to the first argument if provided, otherwise default to localhost
+HOSTNAME=${1:-localhost}
+
+source .env
+
+echo "Checking the internal ports are open."
+lsof -i -P -n | grep LISTEN
+echo "The server is located at $HOSTNAME"
+echo "Checking the response from the django server."
+response=$(curl -G http://$HOSTNAME/api/health-check/)
+if echo "$response" | jq -e '.healthy == true' > /dev/null; then
+    echo "django server is ok"  
+else
+    echo "django server failed"
+    exit 1
+fi
+
+
+echo "acoustic-calcs username: $CALC_USER"
+echo "acoustic-calcs password: $CALC_PASS"
+echo "acoustic-calcs email   : $CALC_EMAIL"
+
+# echo "Creating a new user"
+# curl -X 'POST' \
+#  'http://'$HOSTNAME'/api/user/create/' \
+#  -H 'accept: application/json' \
+#  -H 'Content-Type: multipart/form-data' \
+#  -F 'email='$CALC_EMAIL \
+#  -F 'password='$CALC_PASS \
+#  -F 'name='$CALC_USER
+
+token_response=$(curl -X 'POST' \
+  'http://'$HOSTNAME'/api/user/token/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "'$CALC_EMAIL'",
+  "password": "'$CALC_PASS'"
+}')
+
+# Extract the token value from the response
+token=$(echo "$token_response" | jq -r '.token')
+
+# Check if the token was successfully extracted
+if [ "$token" != "null" ]; then
+    echo "Token request successful. Token: $token"
+else
+    echo "Token request failed"
+    exit 1
+fi
+
+curl -X 'GET' \
+  'http://127.0.0.1/api/user/me/' \
+#  -H "Authorization: Bearer $token" \
+  -H 'X-CSRFTOKEN: '$token \  
+  -H 'accept: application/json'
+
+exit 0
+
+TEST_MODEL=$(cat acoustic/composite/tests/modelPayload.json)
+echo "TEST_MODEL: $TEST_MODEL"
+
+# Perform a GET request with data using the token
+echo curl -X 'POST' \
+    'http://'$HOSTNAME'/composite/' \
+    -H "Authorization: Bearer $token" \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d "'$TEST_MODEL'" 
+
+fe1fa15dd9818abbffa8bba449e93a2fdb065b68

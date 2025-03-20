@@ -1,7 +1,7 @@
 #!/bin/bash
 #python setup.py build_ext --inplace
 rm *.so
-fprettify src/levesque.F90
+#fprettify src/levesque.F90
 f2py -c -m levesque src/levesque.F90
 
 python test.py

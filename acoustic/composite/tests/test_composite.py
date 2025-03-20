@@ -20,7 +20,7 @@ def create_user(email="user@example.com", password="password123"):
 
 def get_model_input_data():
     """Helper function to return model input data."""
-    file_path = os.path.join(os.path.dirname(__file__), "modelPayload.txt")
+    file_path = os.path.join(os.path.dirname(__file__), "modelPayload.json")
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
 
