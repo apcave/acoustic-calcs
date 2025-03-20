@@ -48,8 +48,6 @@ jobs:
 
       - name: Test
         run: docker run -e DB_HOST=${{ secrets.DB_HOST }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASS=${{ secrets.DB_PASS }} -e DB_PORT=${{ secrets.DB_PORT }} -e DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} -e DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }} -e DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }} --rm ${{ secrets.DOCKER_USERNAME }}/acoustic-calc:latest sh -c "python manage.py wait_for_db && python manage.py test"
-        
-
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,6 +59,6 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > acoustic-calcs.pem
-          chmod 400 acoustic-calcs.pem
-          ssh -i acoustic-calcs.pem admin@ec2-3-27-46-83.ap-southeast-2.compute.amazonaws.com ~./run_docker
+          echo "${{ secrets.EC2_SSH_KEY }}" > acoustic.pem
+          chmod 400 acoustic.pem
+          ssh -i acoustic.pem admin@3.104.75.129 -o StrictHostKeyChecking=no 'bash /home/admin/run_docker'
