@@ -61,4 +61,4 @@ jobs:
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > acoustic.pem
           chmod 400 acoustic.pem
-          ssh -i acoustic.pem admin@3.104.75.129 'bash /home/admin/run_docker'
+          ssh -i acoustic.pem admin@3.104.75.129 -o StrictHostKeyChecking=no 'bash /home/admin/run_docker'
