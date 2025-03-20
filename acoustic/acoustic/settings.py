@@ -14,9 +14,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 #print(os.environ)
 
@@ -29,11 +29,11 @@ print('BASE_DIR:', BASE_DIR)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-#print('SECRET_KEY:', SECRET_KEY)
+# print('SECRET_KEY:', SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DJANGO_DEBUG')))
-#print('DEBUG:', DEBUG)
+# print('DEBUG:', DEBUG)
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(
@@ -42,8 +42,8 @@ ALLOWED_HOSTS.extend(
         os.environ.get('DJANGO_ALLOWED_HOSTS').split(','),
     )
 )
-#print('DJANGO_ALLOWED_HOSTS:', os.environ.get('DJANGO_ALLOWED_HOSTS'))
-#print('ALLOWED_HOSTS:', ALLOWED_HOSTS)
+# print('DJANGO_ALLOWED_HOSTS:', os.environ.get('DJANGO_ALLOWED_HOSTS'))
+# print('ALLOWED_HOSTS:', ALLOWED_HOSTS)
 
 # Application definition
 
@@ -105,8 +105,8 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT'),
     }
 }
-print('DATABASES:', DATABASES)
-print('DATABASES HOST:', os.environ.get('DB_HOST'))
+# print('DATABASES:', DATABASES)
+# print('DATABASES HOST:', os.environ.get('DB_HOST'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -144,7 +144,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-print('STATIC_ROOT:', STATIC_ROOT)
+# print('STATIC_ROOT:', STATIC_ROOT)
 
 # Media files (User-uploaded files)
 MEDIA_URL = '/media/'

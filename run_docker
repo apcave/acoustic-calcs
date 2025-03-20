@@ -10,7 +10,7 @@ fi
 
 sudo remove acoustic
 # Build the Docker image
-#sudo docker build --no-cache -t acoustic .
+# sudo docker build --no-cache -t acoustic .
 sudo docker build -t acoustic .
 
 # Run the Docker container
