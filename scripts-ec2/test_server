@@ -1,9 +1,21 @@
 #!/bin/bash
 
-# Set HOSTNAME to the first argument if provided, otherwise default to localhost
-HOSTNAME=${1:-localhost}
+# Set EC2 server IP to the first argument if provided, otherwise default to first EC2 server.
+HOSTNAME=${1:-3.104.75.129}
 
-source .env
+# Check if .env file exists
+if [ -f .env ]; then
+    echo ".env file found. Sourcing .env"
+    source .env
+else
+    echo ".env file not found. Sourcing alternative_env"
+    source ../.env
+fi
+
+# Define color codes
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 echo "Checking the internal ports are open."
 lsof -i -P -n | grep LISTEN
@@ -11,12 +23,11 @@ echo "The server is located at $HOSTNAME"
 echo "Checking the response from the django server."
 response=$(curl -G http://$HOSTNAME/api/health-check/)
 if echo "$response" | jq -e '.healthy == true' > /dev/null; then
-    echo "django server is ok"  
+    echo -e "${GREEN}django server is ok${NC}"  
 else
-    echo "django server failed"
+    echo -e "${RED}django server failed${NC}"
     exit 1
 fi
-
 
 echo "acoustic-calcs username: $CALC_USER"
 echo "acoustic-calcs password: $CALC_PASS"
@@ -47,9 +58,9 @@ access_token=$(echo "$token_response" | jq -r '.access')
 
 # Check if the token was successfully extracted
 if [ "$access_token" != "null" ]; then
-    echo "Token request successful. Token: $access_token"
+    echo -e "${GREEN}Token request successful. Token: $access_token${NC}"
 else
-    echo "Token request failed"
+    echo -e "${RED}Token request failed${NC}"
     exit 1
 fi
 
@@ -61,7 +72,7 @@ user_details=$(curl -X 'GET' \
 echo "User details: $user_details"
 
 # Read the JSON payload from the file
-input_model=$(cat acoustic/composite/tests/modelPayload.json)
+input_model=$(cat modelPayload.json)
 
 # Prepare the JSON payload
 payload=$(jq -n --argjson data "$input_model" '{data: $data}')
@@ -75,7 +86,16 @@ sim_result=$(curl -s -X POST \
     -d "$payload")
 
 # echo "Simulation result: $sim_result"
-input_results=$(cat acoustic/composite/tests/resultsPayload.json)
+input_results=$(cat resultsPayload.json)
 
-python acoustic/composite/utils/compare_json.py "$input_results" "$sim_result" --tolerance 1e-9
+python3 compare_json.py "$input_results" "$sim_result" --tolerance 1e-9
+compare_exit_code=$?
 
+if [ $compare_exit_code -eq 0 ]; then
+    echo -e "${GREEN}JSON comparison successful${NC}"
+else
+    echo -e "${RED}JSON comparison failed${NC}"
+    exit 1
+fi
+echo -e "${GREEN}Server IP Tested: $HOSTNAME.${NC}"
+echo -e "${GREEN}Runtime Tests OK...Server Ready.${NC}"
