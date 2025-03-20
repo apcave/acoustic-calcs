@@ -17,7 +17,7 @@ def run_simulation(model):
     # print("Running the model...")
     # print("Model input data:", model)
 
-    is_comp = model['incidentCompression']
+    is_comp = bool(model['incidentCompression'])
     if model['sweep']['isFrequency']:
         print("Frequency sweep")
         freq = model['sweep']['values']
@@ -37,7 +37,7 @@ def run_simulation(model):
     mu = []
     layers = model['composite']['layers']
     for lay in layers:
-        print("Layer:", lay)
+        # print("Layer:", lay)
         mat = lay['material']
 
         density.append(mat['density'])

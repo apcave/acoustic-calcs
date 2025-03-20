@@ -1,11 +1,12 @@
 """
 Tests for composite APIs.
 """
-
+from ..utils.compare_json import compare_json
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
 import os
+import json
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -25,6 +26,13 @@ def get_model_input_data():
         return file.read()
 
 
+def get_model_output_data():
+    """Helper function to return model output data."""
+    file_path = os.path.join(os.path.dirname(__file__), "resultsPayload.json")
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return file.read()
+
+
 class PublicCompositeAPITests(TestCase):
     """Test the publicly available composite API."""
 
@@ -36,7 +44,7 @@ class PublicCompositeAPITests(TestCase):
         """Test that login is required to access the ingredients."""
         res = self.client.get(COMPOSITE_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class PrivateCompositeAPITests(TestCase):
@@ -54,8 +62,19 @@ class PrivateCompositeAPITests(TestCase):
         payload = {
             'data': get_model_input_data()
         }
-        res = self.client.get(COMPOSITE_URL, payload)
+        res = self.client.post(COMPOSITE_URL, payload, format='json')
 
-        # print( "Response:", res.data )
+        model_str = json.dumps(res.data)
+        test_str = get_model_output_data()
+
+        json1 = json.loads(model_str)
+        json2 = json.loads(test_str)
+
+        self.assertTrue(compare_json(json1, json2, tolerance=1e-6))
+
+        # file_path = os.path.join(os.path.dirname(__file__),
+        # "resultsPayload.json")
+        # with open(file_path, 'w', encoding='utf-8') as file:
+        #    file.write(model_str)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
