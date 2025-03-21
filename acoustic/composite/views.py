@@ -29,7 +29,7 @@ def convert_json_strings(obj):
         OpenApiExample(
             'Example Request',
             value={
-                'data': {'model': 'example'}
+                'data': {}
             }
         ),
     ]
@@ -38,6 +38,7 @@ def convert_json_strings(obj):
 @permission_classes([IsAuthenticated])
 def run_model_endpoint(request):
     """Authenticated endpoint to run the acoustic model."""
+    print('request:', request)
     data = request.data
 
     if not isinstance(data, dict):

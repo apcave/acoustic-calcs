@@ -3,9 +3,6 @@ djangorestframework
 djangorestframework-simplejwt
 drf-spectacular
 psycopg2-binary
-gunicorn
-python-dotenv
-dotenv
 uwsgi
 flake8
 numpy
