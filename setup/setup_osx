@@ -89,7 +89,7 @@ python manage.py migrate
 
 
 # Run the Python script to create the superuser
-python manage.py create_super_user
+python manage.py create_super_user $DJANGO_SUPERUSER_EMAIL $DJANGO_SUPERUSER_PASSWORD
 
 # Clean up the Python script
 rm create_superuser.py
