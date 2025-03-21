@@ -25,13 +25,7 @@ The project is best debugged natively on your development computer, instruction 
 For a mac OSX,
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install python
-brew install gcc
-brew install gfortran
-brew install jq
-brew install --cask docker
-brew install postgresql@14
+ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_osx)"
 ```
 
 alternatively for Linux or Debian,

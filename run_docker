@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 source .env
 
 running_containers=$(sudo docker ps -q)
@@ -8,7 +11,7 @@ if [ -n "$running_containers" ]; then
     sudo docker remove $running_containers
 fi
 
-sudo remove acoustic
+sudo docker remove acoustic
 # Build the Docker image
 # sudo docker build --no-cache -t acoustic .
 sudo docker build -t acoustic .
