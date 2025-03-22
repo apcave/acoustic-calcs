@@ -31,17 +31,21 @@ def compare_json(json1, json2, tolerance=1e-6):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Compare two JSON strings with numerical tolerance.')
-    parser.add_argument('json1', type=str, help='First JSON string')
-    parser.add_argument('json2', type=str, help='Second JSON string')
+        description='Compare two JSON files with numerical tolerance.')
+    parser.add_argument('file1', type=str, help='First JSON file')
+    parser.add_argument('file2', type=str, help='Second JSON file')
     parser.add_argument('--tolerance', type=float, default=1e-6,
                         help='Numerical tolerance for float comparisons')
 
     args = parser.parse_args()
 
-    # Parse the JSON strings
-    json1 = json.loads(args.json1)
-    json2 = json.loads(args.json2)
+    print(f"Comparing {args.file1} and {args.file2} with tolerance {args.tolerance}")
+
+    # Load JSON content from files
+    with open(args.file1, 'r') as f:
+        json1 = json.load(f)
+    with open(args.file2, 'r') as f:
+        json2 = json.load(f)
 
     # Compare JSON data with a tolerance
     if compare_json(json1, json2, args.tolerance):

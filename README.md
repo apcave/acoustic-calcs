@@ -87,7 +87,7 @@ C:\acoustic-calcs>.\windows\run_docker.ps1
 Run curl based API tests on any IP using your .env file settings.
 
 ```bash
-C:\acoustic-calcs>.\windows\tests_curl.ps1 localhost
+C:\acoustic-calcs>.\windows\tests_url.ps1 localhost
 ```
 
 ### Environment Variables

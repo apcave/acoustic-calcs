@@ -23,7 +23,7 @@ echo "The server is located at $HOSTNAME"
 echo "Checking the response from the django server."
 response=$(curl -G http://$HOSTNAME/api/health-check/)
 if echo "$response" | jq -e '.healthy == true' > /dev/null; then
-    echo -e "${GREEN}django server is ok${NC}"  
+    echo -e "${GREEN}django server is ok${NC}"
 else
     echo -e "${RED}django server failed${NC}"
     exit 1
