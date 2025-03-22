@@ -1,4 +1,7 @@
 .\start_win.ps1
+
+$Env:PGPASSWORD="test"; '\conninfo' | psql -U postgres -c "alter user postgres with password '$env:POSTGRES_PASS';"
+
 .\windows\build_fortran.ps1
 .\windows\setup_db.ps1
 

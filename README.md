@@ -34,28 +34,60 @@ alternatively for Linux or Debian,
 sudo apt install -y nginx python3 gcc gfortran curl jq lsof
 ```
 
-Clone the repository and prepare the python environment,
+### Windows
+
+The project setup and dependent software can be installed using powershell scripts.
+Run the following in a powershell terminal in the target project root directory with administrator privileges.
+The contents of the script are [here](https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_win.ps1) it installs git, python, docker, ninja, mingw (gfortran), PostgreSQL clones the repository and creates an environment variables file.
 
 ```bash
-git clone https://github.com/apcave/acoustic-calcs.git
-cd acoustic-calcs
-python3 -m venv venv
-source venv/bin/activate
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_win.ps1" -OutFile "setup_win.ps1"
+powershell -ExecutionPolicy Bypass -File "setup_win.ps1"
 ```
 
-Prepare the environment variables,
+After completing the installation process reboot and run the next script inside the repository clone.
 
 ```bash
-DB_NAME=acoustic_calcs
-DB_USER=acoustic
-DB_PASS=
-DB_HOST=
-DB_PORT=
-DJANGO_SECRET_KEY=
-DJANGO_DEBUG=1
-DJANGO_ALLOWED_HOSTS=*
-CALC_EMAIL=
-CALC_PASS=
+C:\acoustic-calcs>.\windows\setup_reboot
+```
+
+It will configure python, build and copy the fortran code, configure the database, create users, test the db connection and run the TTD tests.
+Finally it runs the Django development server on 0.0.0.0 port 80, native on your host.
+Close the development server and execute the following to start a docker container on you host.
+
+```bash
+C:\acoustic-calcs>.\windows\run_docker.ps1
+```
+
+This will build the docker container with the django code inside, boot the container, run test and starts to serve on 0.0.0.0 port 80 using the production server code.
+Note the native and the virtual servers both attach to 0.0.0.0 port 80 so an error will occur if you attempt to run both at the same time.
+
+#### Windows further details
+
+The project has a number of powershell scripts that can be used during development.
+
+Configure the environment variables prior to running python commands in your powershell.
+
+```bash
+C:\acoustic-calcs>.\start_win.ps1
+```
+
+Run the development server in a powershell.
+
+```bash
+C:\acoustic-calcs>.\windows\run_native.ps1
+```
+
+Run the the production server in a docker container.
+
+```bash
+C:\acoustic-calcs>.\windows\run_docker.ps1
+```
+
+Run curl based API tests on any IP using your .env file settings.
+
+```bash
+C:\acoustic-calcs>.\windows\tests_curl.ps1 localhost
 ```
 
 ### Environment Variables
