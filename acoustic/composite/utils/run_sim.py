@@ -7,7 +7,6 @@ import numpy as np
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
-
 import levesque  # noqa: E402
 
 

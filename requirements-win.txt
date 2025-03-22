@@ -1,0 +1,8 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+drf-spectacular
+psycopg2-binary
+flake8
+numpy
+meson

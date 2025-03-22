@@ -3,8 +3,12 @@ build
 venv
 *.mod
 *.so
+*.pyd
 ._.DS_Store
 .DS_Store
+
+# Ignore .env file
+.env
 
 # Ignore all __pycache__ directories
 __pycache__/
