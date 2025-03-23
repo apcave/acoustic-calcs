@@ -5,6 +5,8 @@ python manage.py test
 Write-Host "Testing the db connection"
 python manage.py test_db_connection
 
+Write-Host "Collecting static files"
+python manage.py collectstatic --noinput
 
 Write-Host "Creating the acoustic API database tables"
 python manage.py makemigrations
