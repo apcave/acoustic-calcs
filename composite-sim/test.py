@@ -4,39 +4,9 @@ import matplotlib.pyplot as plt
 import sys
 import os
 
-sys.path.append(os.path.abspath('.'))
+#sys.path.append(os.path.abspath('.'))
 
-#import levesque
-
-import pkgutil
-
-# List all available modules
-available_modules = sorted([module.name for module in pkgutil.iter_modules()])
-
-# Print the list of available modules
-for module in available_modules:
-    print(module)
-
-import pkg_resources
-
-# List all installed packages
-installed_packages = pkg_resources.working_set
-
-# Print details for each package
-for package in installed_packages:
-    print(f"Name: {package.project_name}")
-    print(f"Version: {package.version}")
-    print(f"Location: {package.location}")
-    print("-" * 40)
-
-
-#import levesque
-
-
-# List all functions and classes in the module
-# for name, obj in inspect.getmembers(your_module):
-#     if inspect.isfunction(obj) or inspect.isclass(obj):
-#         print(name)
+import levesque
 
 
 def run_acoustic_simulation(is_comp: bool, angle, freq, density, thick, cp, attp, LongM, cs, atts, mu):

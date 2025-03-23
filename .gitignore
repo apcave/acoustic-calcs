@@ -6,6 +6,7 @@ venv
 *.pyd
 ._.DS_Store
 .DS_Store
+*.dll
 
 # Ignore .env file
 .env

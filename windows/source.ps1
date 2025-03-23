@@ -41,17 +41,6 @@ DJANGO_NORMAL_USER_PASSWORD=$($env:DJANGO_NORMAL_USER_PASSWORD)
     }
 }
 
-Write-Host "All environment variables:"
-Get-ChildItem Env:
+# Write-Host "All environment variables:"
+# Get-ChildItem Env:
 
-
-# Set the password for the postgres user
-# $postgresPassword = "581f66f99ce64bc981f24b23130cf386" # Replace with the new password you set
-# $Env:PGPASSWORD="581f66f99ce64bc981f24b23130cf386"; '\conninfo' | psql -Upostgres
-# Log in to PostgreSQL and execute commands
-# Create PostgreSQL user and database
-# psql postgres -c "CREATE USER $env:DB_USER WITH PASSWORD '$env:DB_PASS';"
-# psql postgres -c "ALTER USER $env:DB_USER CREATEDB;"
-# psql postgres -c "CREATE DATABASE $env:DB_NAME OWNER $env:DB_USER;"
-# psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE $env:DB_NAME TO $env:DB_USER;"
-# psql postgres -c "GRANT ALL PRIVILEGES ON SCHEMA public TO $env:DB_USER;"

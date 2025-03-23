@@ -37,10 +37,10 @@ RUN chown -R django-user:django-user /acoustic/staticfiles && \
 COPY ./nginx/default /etc/nginx/sites-available/default
 COPY ./nginx/default /etc/nginx/sites-enabled/default
 
-COPY ./scripts/run.sh .
+COPY ./scripts/run_inside_docker.sh .
 
 # Expose port 80
 EXPOSE 80
 
 # Start Nginx and uWSGI
-CMD ["sh", "run.sh"]
+CMD ["bash", "run_inside_docker.sh"]

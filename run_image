@@ -1,4 +1,0 @@
-#!/bin/bash
-sudo docker run acoustic
-sudo docker exec -it acoustic /bin/bash  
-python manage.py test_db_connection
