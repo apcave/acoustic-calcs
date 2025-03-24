@@ -77,6 +77,7 @@ psql postgres <<EOF
 CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';
 ALTER USER $DB_USER CREATEDB;
 ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';
+DROP DATABASE $DB_NAME;
 CREATE DATABASE $DB_NAME OWNER $DB_USER;
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER;
@@ -128,5 +129,4 @@ echo -e "${GREEN}Docker and native builds completed.${NC}"
 echo -e "${GREEN}Run "python manage.py runserver 0.0.0.0:8080" in the acoustic-calcs/acoustic directory${NC}"
 echo -e "${GREEN}The dockfile is running on 0.0.0.0:80${NC}"
 
-cd scripts-ec2
-./test_server.sh localhost
+./scripts-ec2/test_server.sh localhost

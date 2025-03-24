@@ -7,9 +7,6 @@ HOSTNAME=${1:-3.104.75.129}
 if [ -f .env ]; then
     echo ".env file found. Sourcing .env"
     source .env
-else
-    echo ".env file not found. Sourcing alternative_env"
-    source ../.env
 fi
 
 # Define color codes
@@ -32,23 +29,15 @@ fi
 echo "acoustic-calcs password: $DJANGO_NORMAL_USER_PASSWORD"
 echo "acoustic-calcs email   : $DJANGO_NORMAL_USER_EMAIL"
 
-# echo "Creating a new user"
-# curl -X 'POST' \
-#  'http://'$HOSTNAME'/api/user/create/' \
-#  -H 'accept: application/json' \
-#  -H 'Content-Type: multipart/form-data' \
-#  -F 'email='$CALC_EMAIL \
-#  -F 'password='$CALC_PASS \
-#  -F 'name='$CALC_USER
 
 token_response=$(curl -X 'POST' \
   'http://'$HOSTNAME'/api/user/token/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d '{
-  "email": "'$DJANGO_NORMAL_USER_EMAIL'",
-  "password": "'$DJANGO_NORMAL_USER_PASSWORD'"
-}')
+  -d "{
+  \"email\": \"$DJANGO_NORMAL_USER_EMAIL\",
+  \"password\": \"$DJANGO_NORMAL_USER_PASSWORD\"
+}")
 
 #echo "Token response: $token_response"
 
@@ -71,10 +60,12 @@ user_details=$(curl -X 'GET' \
 echo "User details: $user_details"
 
 # Read the JSON payload from the file
-input_model=$(cat modelPayload.json)
+input_model=$(cat ./scripts-ec2/modelPayload.json)
 
 # Prepare the JSON payload
 payload=$(jq -n --argjson data "$input_model" '{data: $data}')
+
+# echo "Payload: $payload"
 
 # Perform a POST request with the access token and JSON payload
 sim_result=$(curl -s -X POST \
@@ -84,17 +75,22 @@ sim_result=$(curl -s -X POST \
     -H 'Content-Type: application/json' \
     -d "$payload")
 
-# echo "Simulation result: $sim_result"
-input_results=$(cat resultsPayload.json)
+#echo "Simulation result: $sim_result"
+echo $sim_result > temp.json
 
-python3 compare_json.py "$input_results" "$sim_result" --tolerance 1e-9
-compare_exit_code=$?
+python_response=$(python3 ./scripts-ec2/compare_json.py ./scripts-ec2/resultsPayload.json ./temp.json --tolerance 1e-9)
+rm ./temp.json
 
-if [ $compare_exit_code -eq 0 ]; then
+extracted_response=$(echo "$python_response" | sed -n 's/.*\(The.*\)/\1/p')
+echo $extracted_response
+
+# Check if the token was successfully extracted
+if [ "$extracted_response" == "The JSON objects are equal within the given tolerance." ]; then
     echo -e "${GREEN}JSON comparison successful${NC}"
 else
     echo -e "${RED}JSON comparison failed${NC}"
     exit 1
 fi
+
 echo -e "${GREEN}Server IP Tested: $HOSTNAME.${NC}"
 echo -e "${GREEN}Runtime Tests OK...Server Ready.${NC}"
