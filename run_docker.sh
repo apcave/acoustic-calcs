@@ -26,9 +26,15 @@ sudo docker build -t acoustic .
 
 echo "Run the Docker container. (Setup for PostgreSQL on host)"
 # Get the host's IP address
-HOST_IP=$(hostname -I | awk '{print $1}')
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    HOST_IP=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+else
+    # Debian
+    HOST_IP=$(hostname -I | awk '{print $1}')
+fi
 
-
+echo "Host IP: $HOST_IP"
 sudo docker run -d --network host \
     -e DB_HOST=$HOST_IP \
     -e DB_NAME=$DB_NAME \

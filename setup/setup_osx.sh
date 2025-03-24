@@ -52,21 +52,35 @@ echo "DJANGO_NORMAL_USER_PASSWORD=$DJANGO_NORMAL_USER_PASSWORD"
 
 # Start PostgreSQL service
 
-brew services start postgresql@14
+brew services start postgresql
+sql_config=$(echo "SHOW config_file;" | psql postgres | sed 's|^[^/]*||')
+hba_config=$(echo "SHOW hba_file;" | psql postgres | sed 's|^[^/]*||')
 
-# Wait for PostgreSQL to start
+echo $sql_config
+echo $hba_config
 
+brew services stop postgresql
+echo "listen_addresses = '*'" | sudo tee -a $sql_config
+echo "port = $DB_PORT" | sudo tee -a $sql_config
+echo "host all all 0.0.0.0/0 scram-sha-256" | sudo tee -a $hba_config
+
+brew services start postgresql
 sleep 5
+lsof -i -P -n | grep postgres
+
 
 # Log in to PostgreSQL and execute commands
 # Create PostgreSQL user and database
 psql postgres <<EOF
 CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';
 ALTER USER $DB_USER CREATEDB;
+ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';
 CREATE DATABASE $DB_NAME OWNER $DB_USER;
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER;
 EOF
+
+
 
 # Clone the repository
 echo "Clone the API repository"

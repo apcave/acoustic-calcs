@@ -22,34 +22,47 @@ It is a back-end [Djang](https://www.djangoproject.com/) REST API managing Fortr
 
 The project is best debugged natively on your development computer there are installation scripts to get you running on Mac OSX, Debain and Windows.
 
+The scripts install;
+
+- They clone the project into the directory where they run.
+- Python, setup a virtual environment install the required packages.
+- gcc and gfortan for compiling the fortran code into a python module.
+- PostgreSQL a server is installed on the local machine and the database is intialialised.
+- Minor utilites and further scripts in the respository directory.
+
 For a mac OSX run the follwing command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_osx.sh)
 
-````bash
+```bash
  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_osx.sh)"
-````
+```
 
 Alternatively, for Debain run the following command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_debian.sh)
 
-````bash
+```bash
  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_debian.sh)"
-````
+```
 
 Finally for Windows run the following command, the script is runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_win.ps1)
-````bash
+
+```bash
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_win.ps1" -OutFile "setup_win.ps1"
 powershell -ExecutionPolicy Bypass -File "setup_win.ps1"
-````
+```
 
 These scripts will install the required software, create a database running locally, build and test on both a docker container and running on the host OS. After installation the API can be inspected in your browser on the local machine.
 
-### Mac and Debian
+### Project Configuration
+
+The installation scripts create a file with environmental variables in the project root called ".env". This file contains the details of the Postgres accounts used to configure and run the database. The hostname and port of the PostreSQL server to be used. Development acoustic-cals accounts used to manage, access and test the API while in development. There is also some Django configurations including a debug flag, password hashing secret
+
+### Mac OSX and Debian
 
 On Debain to issue python command from the terminal requires the environment variables to be exported using the following command.
 
-````bash
+```bash
 export $(cat .env | xargs)
 
-````
+```
 
 Otherwise shell scripts can be used
 
