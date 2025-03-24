@@ -4,21 +4,29 @@ set -e
 
 source .env
 
+echo "Checking for running Docker containers and stopping them."
 running_containers=$(sudo docker ps -q)
 if [ -n "$running_containers" ]; then
     echo "Stopping all running Docker containers"
     sudo docker stop $running_containers
-    sudo docker remove $running_containers
 fi
 
-sudo docker remove acoustic
+echo "Check for existing Docker containers with the name 'acoustic' and remove them"
+existing_container=$(sudo docker ps -a -q -f name=acoustic)
+if [ -n "$existing_container" ]; then
+    echo "Removing existing Docker container with name 'acoustic'"
+    sudo docker rm -f $existing_container
+fi
+
+
 # Build the Docker image
 # sudo docker build --no-cache -t acoustic .
+echo "Building the Docker container."
 sudo docker build -t acoustic .
 
-# Run the Docker container
+echo "Run the Docker container. (Setup for PostgreSQL on host)"
 sudo docker run -d -p 80:80 \
-    -e DB_HOST=$DB_HOST \
+    -e DB_HOST=host.docker.internal  \
     -e DB_NAME=$DB_NAME \
     -e DB_USER=$DB_USER \
     -e DB_PASS=$DB_PASS \

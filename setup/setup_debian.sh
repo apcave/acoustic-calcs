@@ -7,15 +7,7 @@ set -e
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-/bin/bash -c $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
-brew install git
-brew install python
-brew install gcc
-brew install gfortran
-brew install jq
-brew install --cask docker
-brew install postgresql@14
-brew install ninja
+sudo apt install -y git python3 gcc gfortran jq docker postgresql postgresql-contrib uuid-runtime
 
 if [ ! -f ".env" ]; then
     echo "Creating environment variables for build and run time"
@@ -36,6 +28,8 @@ if [ ! -f ".env" ]; then
 fi
 echo "Environment variables:"
 source .env
+export $(cat .env | xargs)
+
 echo "DB_NAME=$DB_NAME"
 echo "DB_USER=$DB_USER"
 echo "DB_PASS=$DB_PASS"
@@ -51,18 +45,16 @@ echo "DJANGO_NORMAL_USER_EMAIL=$DJANGO_NORMAL_USER_EMAIL"
 echo "DJANGO_NORMAL_USER_PASSWORD=$DJANGO_NORMAL_USER_PASSWORD"
 
 # Start PostgreSQL service
-
-brew services start postgresql@14
-
-# Wait for PostgreSQL to start
-
-sleep 5
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+#sudo systemctl status postgresql
 
 # Log in to PostgreSQL and execute commands
 # Create PostgreSQL user and database
-psql postgres <<EOF
+sudo -u postgres psql <<EOF
 CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';
 ALTER USER $DB_USER CREATEDB;
+ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';
 CREATE DATABASE $DB_NAME OWNER $DB_USER;
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER;
@@ -72,6 +64,7 @@ EOF
 echo "Clone the API repository"
 git clone https://github.com/apcave/acoustic-calcs.git
 cp .env acoustic-calcs/
+
 cd acoustic-calcs
 
 echo "Install the python packages to the virtual environment."
@@ -87,6 +80,7 @@ mv levesque*.so ../../acoustic/composite/utils/
 cd ../../
 
 cd acoustic
+echo "Testing the database connection"
 python manage.py test_db_connection
 
 
@@ -97,6 +91,7 @@ python manage.py migrate
 
 # Run the Python script to create the superuser
 python manage.py create_super_user "$DJANGO_SUPERUSER_EMAIL" "$DJANGO_SUPERUSER_PASSWORD"
+python manage.py create_user "$DJANGO_NORMAL_USER_NAME" "$DJANGO_NORMAL_USER_PASSWORD"
 
 echo "Running TDD tests"
 python manage.py test
@@ -104,7 +99,9 @@ echo -e "${GREEN}Native builds completed.${NC}"
 
 cd ..
 echo "Run the Django server in a Docker container."
-./run_docker.sh
+pwd
+ls
+sudo ./run_docker.sh
 
 echo -e "${GREEN}Docker and native builds completed.${NC}"
 echo -e "${GREEN}Run "python manage.py runserver 0.0.0.0:8080" in the acoustic-calcs/acoustic directory${NC}"

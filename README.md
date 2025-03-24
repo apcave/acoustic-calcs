@@ -1,4 +1,4 @@
-# Composite Acoustic Simulator.
+# Composite Acoustic Simulator
 
 This repository contains the code for server side simulator for the [Composite Acoustic](https://sound-wave.dev) web application hosted in the link.
 
@@ -20,9 +20,9 @@ It is a back-end [Djang](https://www.djangoproject.com/) REST API managing Fortr
 
 ## Getting Started
 
-The project is best debugged natively on your development computer, instruction are provided here for Linux / WSL and Mac.
+The project is best debugged natively on your development computer there are installation scripts to get you running on Debain, Mac OSX and with Windows.
 
-For a mac OSX,
+For a mac OSX run the follwing command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_osx)
 
 ```bash
  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_osx)"

@@ -16,7 +16,7 @@ COPY ./composite-sim/src/levesque.F90 /acoustic/
 
 RUN adduser --no-create-home --disabled-password django-user && \
     apt-get update && \
-    apt-get install -y nginx python3-dev gcc gfortran curl jq lsof && \
+    apt-get install -y nginx python3-dev gcc gfortran curl jq lsof netcat-openbsd && \
     rm -rf /var/lib/apt/lists/* && \
     python -m venv /py && \
     pip install --upgrade pip && \
@@ -27,7 +27,8 @@ RUN adduser --no-create-home --disabled-password django-user && \
 
 # Copy project
 COPY /acoustic/ /acoustic/
-RUN chown -R django-user:django-user /acoustic/staticfiles && \
+RUN mkdir /acoustic/staticfiles && \
+    chown -R django-user:django-user /acoustic/staticfiles && \
     rm -rf /acoustic/composite/utils/*.so && \
     mv levesque*.so /acoustic/composite/utils/ && \
     ls -lah && \

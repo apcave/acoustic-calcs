@@ -17,6 +17,9 @@ set -e
 
 python --version
 
+echo "Sleep for 2 days to get a shell for debugging."
+sleep 2d
+
 # Start Nginx
 echo "Starting Nginx"
 service nginx start || { echo 'Starting Nginx failed' ; cat /var/log/nginx/error.log ; exit 1; }
