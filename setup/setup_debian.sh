@@ -99,7 +99,7 @@ python manage.py migrate
 
 # Run the Python script to create the superuser
 python manage.py create_super_user "$DJANGO_SUPERUSER_EMAIL" "$DJANGO_SUPERUSER_PASSWORD"
-python manage.py create_user "$DJANGO_NORMAL_USER_NAME" "$DJANGO_NORMAL_USER_PASSWORD"
+python manage.py create_user "$DJANGO_NORMAL_USER_EMAIL" "$DJANGO_NORMAL_USER_PASSWORD"
 
 echo "Running TDD tests"
 python manage.py test
@@ -112,7 +112,6 @@ ls
 sudo ./run_docker.sh
 
 echo -e "${GREEN}Docker and native builds completed.${NC}"
-echo -e "${GREEN}Run "python manage.py runserver 0.0.0.0:8080" in the acoustic-calcs/acoustic directory${NC}"
 echo -e "${GREEN}The dockfile is running on 0.0.0.0:80${NC}"
 
 ./scripts-ec2/test_server.sh localhost
