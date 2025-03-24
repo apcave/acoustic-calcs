@@ -18,9 +18,7 @@ if [ -n "$existing_container" ]; then
     sudo docker rm -f $existing_container
 fi
 
-
 # Build the Docker image
-# sudo docker build --no-cache -t acoustic .
 echo "Building the Docker container."
 sudo docker build -t acoustic .
 
@@ -35,7 +33,8 @@ else
 fi
 
 echo "Host IP: $HOST_IP"
-sudo docker run -d --network host \
+
+sudo docker run -d -p 80:80 \
     -e DB_HOST=$HOST_IP \
     -e DB_NAME=$DB_NAME \
     -e DB_USER=$DB_USER \
@@ -48,9 +47,14 @@ sudo docker run -d --network host \
 
 # Check container logs
 echo "Checking the docker has an open port"
-lsof -i -P -n | grep LISTEN
-# ss -tuln
+if command -v lsof &> /dev/null; then
+    lsof -i -P -n | grep LISTEN
+else
+    ss -tuln
+fi
 
 echo "Checking the docker logs, look for the result of the internal health check"
 sleep 10
 sudo docker logs acoustic
+
+echo "You can now access the web server at http://localhost:80"

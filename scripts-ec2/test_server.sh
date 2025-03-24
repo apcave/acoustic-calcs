@@ -29,9 +29,8 @@ else
     exit 1
 fi
 
-echo "acoustic-calcs username: $CALC_USER"
-echo "acoustic-calcs password: $CALC_PASS"
-echo "acoustic-calcs email   : $CALC_EMAIL"
+echo "acoustic-calcs password: $DJANGO_NORMAL_USER_PASSWORD"
+echo "acoustic-calcs email   : $DJANGO_NORMAL_USER_EMAIL"
 
 # echo "Creating a new user"
 # curl -X 'POST' \
@@ -47,8 +46,8 @@ token_response=$(curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "email": "'$CALC_EMAIL'",
-  "password": "'$CALC_PASS'"
+  "email": "'$DJANGO_NORMAL_USER_EMAIL'",
+  "password": "'$DJANGO_NORMAL_USER_PASSWORD'"
 }')
 
 #echo "Token response: $token_response"

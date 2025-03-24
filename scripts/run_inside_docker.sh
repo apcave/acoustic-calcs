@@ -64,9 +64,9 @@ service nginx status
 echo "Checking the response from the re-routed Nginx server."
 response=$(curl -G http://0.0.0.0:80/api/health-check/)
 if echo "$response" | jq -e '.healthy == true' > /dev/null; then
-    echo "\e[32mNginx server is ok\e[0m"  # Green text
+    echo "Nginx server is ok" 
 else
-    echo "\e[31mNginx server failed\e[0m"  # Red text
+    echo "Nginx server failed" 
 fi
 
 # Wait for the uwsgi process to complete

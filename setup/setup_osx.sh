@@ -36,6 +36,8 @@ if [ ! -f ".env" ]; then
 fi
 echo "Environment variables:"
 source .env
+export $(cat .env | xargs)
+
 echo "DB_NAME=$DB_NAME"
 echo "DB_USER=$DB_USER"
 echo "DB_PASS=$DB_PASS"
@@ -111,6 +113,8 @@ python manage.py migrate
 
 # Run the Python script to create the superuser
 python manage.py create_super_user "$DJANGO_SUPERUSER_EMAIL" "$DJANGO_SUPERUSER_PASSWORD"
+# Run the Python script to create the superuser
+python manage.py create_user "$DJANGO_NORMAL_USER_EMAIL" "$DJANGO_NORMAL_USER_PASSWORD"
 
 echo "Running TDD tests"
 python manage.py test
