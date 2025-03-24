@@ -25,8 +25,12 @@ echo "Building the Docker container."
 sudo docker build -t acoustic .
 
 echo "Run the Docker container. (Setup for PostgreSQL on host)"
-sudo docker run -d -p 80:80 \
-    -e DB_HOST=host.docker.internal  \
+# Get the host's IP address
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+
+sudo docker run -d --network host \
+    -e DB_HOST=$HOST_IP \
     -e DB_NAME=$DB_NAME \
     -e DB_USER=$DB_USER \
     -e DB_PASS=$DB_PASS \

@@ -7,10 +7,16 @@ venv
 ._.DS_Store
 .DS_Store
 *.dll
+*.pyc
+*.pyo
 
 # Ignore .env file
 .env
 
 # Ignore all __pycache__ directories
 __pycache__/
+__pycache__/*
 staticfiles/
+acoustic/user/__pycache__/*
+acoustic/acoustic/__pycache__/*
+

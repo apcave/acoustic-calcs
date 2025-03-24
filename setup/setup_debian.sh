@@ -44,6 +44,13 @@ echo "DJANGO_NORMAL_USER_NAME=$DJANGO_NORMAL_USER_NAME"
 echo "DJANGO_NORMAL_USER_EMAIL=$DJANGO_NORMAL_USER_EMAIL"
 echo "DJANGO_NORMAL_USER_PASSWORD=$DJANGO_NORMAL_USER_PASSWORD"
 
+echo "Setting up PostgreSQL"
+sql_config=$(sudo -u postgres psql -c 'SHOW config_file;' | grep postgresql.conf)
+hba_config=$(sudo -u postgres psql -c 'SHOW hba_file;' | grep pg_hba.conf)
+echo "listen_addresses = '*'" | sudo tee -a $sql_config
+echo "port = $DB_PORT" | sudo tee -a $sql_config
+echo "host all all 0.0.0.0/0 scram-sha-256" | sudo tee -a $hba_config
+
 # Start PostgreSQL service
 sudo systemctl start postgresql
 sudo systemctl enable postgresql

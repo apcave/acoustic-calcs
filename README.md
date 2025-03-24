@@ -20,35 +20,45 @@ It is a back-end [Djang](https://www.djangoproject.com/) REST API managing Fortr
 
 ## Getting Started
 
-The project is best debugged natively on your development computer there are installation scripts to get you running on Debain, Mac OSX and with Windows.
+The project is best debugged natively on your development computer there are installation scripts to get you running on Mac OSX, Debain and Windows.
 
-For a mac OSX run the follwing command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_osx)
+For a mac OSX run the follwing command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_osx.sh)
 
-```bash
- /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_osx)"
-```
+````bash
+ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_osx.sh)"
+````
 
-alternatively for Linux or Debian,
+Alternatively, for Debain run the following command, the script it runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_debian.sh)
 
-```bash
-sudo apt install -y nginx python3 gcc gfortran curl jq lsof
-```
+````bash
+ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_debian.sh)"
+````
 
-### Windows
-
-The project setup and dependent software can be installed using powershell scripts.
-Run the following in a powershell terminal in the target project root directory with administrator privileges.
-The contents of the script are [here](https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_win.ps1) it installs git, python, docker, ninja, mingw (gfortran), PostgreSQL clones the repository and creates an environment variables file.
-
-```bash
+Finally for Windows run the following command, the script is runs can be viewed [here.](https://github.com/apcave/acoustic-calcs/blob/main/setup/setup_win.ps1)
+````bash
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/apcave/acoustic-calcs/refs/heads/main/setup/setup_win.ps1" -OutFile "setup_win.ps1"
 powershell -ExecutionPolicy Bypass -File "setup_win.ps1"
-```
+````
+
+These scripts will install the required software, create a database running locally, build and test on both a docker container and running on the host OS. After installation the API can be inspected in your browser on the local machine.
+
+### Mac and Debian
+
+On Debain to issue python command from the terminal requires the environment variables to be exported using the following command.
+
+````bash
+export $(cat .env | xargs)
+
+````
+
+Otherwise shell scripts can be used
+
+### Windows
 
 After completing the installation process reboot and run the next script inside the repository clone.
 
 ```bash
-C:\acoustic-calcs>.\windows\setup_reboot
+C:\acoustic-calcs>.\windows\setup_reboot.ps1
 ```
 
 It will configure python, build and copy the fortran code, configure the database, create users, test the db connection and run the TTD tests.

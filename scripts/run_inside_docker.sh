@@ -17,8 +17,9 @@ set -e
 
 python --version
 
-echo "Sleep for 2 days to get a shell for debugging."
-sleep 2d
+# echo "Sleep for 2 days to get a shell for debugging."
+# echo "Run : sudo docker exec -it acoustic /bin/bash"
+# sleep 2d
 
 # Start Nginx
 echo "Starting Nginx"
