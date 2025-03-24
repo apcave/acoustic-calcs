@@ -24,9 +24,9 @@ The project is best debugged natively on your development computer there are ins
 
 The scripts install;
 
-- They clone the project into the directory where they run.
+- Git and clone the project into the directory where they run.
 - Python, setup a virtual environment install the required packages.
-- gcc and gfortan for compiling the fortran code into a python module.
+- gcc and gfortan (ninja) for compiling the fortran code into a python module.
 - PostgreSQL a server is installed on the local machine and the database is intialialised.
 - Minor utilites and further scripts in the respository directory.
 
@@ -57,14 +57,29 @@ The installation scripts create a file with environmental variables in the proje
 
 ### Mac OSX and Debian
 
-On Debain to issue python command from the terminal requires the environment variables to be exported using the following command.
+On Debain to issue python commands from the terminal requires the environment variables to be sourced run.
 
 ```bash
-export $(cat .env | xargs)
-
+source ./run_native.sh
 ```
 
-Otherwise shell scripts can be used
+This will launch the python virtual enviroment, get the enviroment variables from file, start the django server in the backgound on [localhost:8080](http://localhost:8080) and do a runtime test of the server.
+
+To run django in the docker container run,
+
+```bash
+./run_docker.sh
+```
+
+this will build the container, do software development testing, test the ports internally and run the django server on port [localhost:80](http://localhost:80).
+
+#### Further Scripts and Commands
+
+There is a script to delete the database and recreate the tables and users.
+
+```bash
+./scripts/recreate_user.ps
+```
 
 ### Windows
 
@@ -113,73 +128,34 @@ Run curl based API tests on any IP using your .env file settings.
 C:\acoustic-calcs>.\windows\tests_url.ps1 localhost
 ```
 
-### Environment Variables
+### Django Commands
 
-Environment variables can be set using at .env file at the project root for development or configured using server secrets.
-
-#### Authentication Hash
+There are a main commands to be aware of when using the server;
 
 ```bash
-AUTH_SECRET=
+python ./acoustic/manage.py runserver 0.0.0.0:8080
 ```
 
-To generate a secure authentication secret, you can use the following.
+starts the server on port 8080,
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+python ./acoustic/manage.py test
 ```
 
-Copy the result into the environment variable or .env file.
-
-#### Google Authentication Provider
+starts the Test Driven Development (TTD) tests,
 
 ```bash
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+python ./acoustic/manage.py test_db_connection
 ```
 
-Follow the instruction from NextAuth.js [here](https://next-auth.js.org/providers/google). You will need a google developer account
+tests the database connection.
 
-#### MongoDB variable
+## Project Overview
 
-```bash
-MONGODB_URI="mongodb+srv://<username>:<password>@<collection>.<url>/acoustic?retryWrites=true&w=majority"
-```
+There is a single fortran file [here](https://github.com/apcave/acoustic-calcs/blob/main/composite-sim/src/levesque.F90) that implements a model of the response of a composite material to shear and compression pressure wave.
 
-The web application uses a [MongoDB](https://mongodb.com) database for persistent storage. You will need a [connection string](https://www.mongodb.com/resources/products/fundamentals/mongodb-connection-string) to a database with administrator access. You can get a database and connection with the free account.
+The scripts setup the environment and use the command f2py to compile the correctly formatted fortran into a python module. The python module need to be call in a specific way for data integrity and memory usage it is called in this file [here](https://github.com/apcave/acoustic-calcs/blob/main/acoustic/composite/utils/run_sim.py).
 
-## Running on a Development Server
+Django provides user authentication and management, JWT software tokens and an API endpoint that accepts a composite material model in JSON and results that model with simulation results. The users can be remotely administered using the end-point [http://localhost/api/admin](http://localhost/api/admin) and are is Swagger documentation at [http://localhost/api/docs](http://localhost/api/admin) where the API can be tested.
 
-Once the environmental variables are correct set simply run.
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Running on a Production Server
-
-1. Make your own GitHub repository of this code.
-
-2. Get an account with [Vercel](http://vercel.com) follow the instructions to setup with a GitHub account. The Vercel project will attach to a GitHub repository and the project has options for setting server secrets.
-
-3. Push to CI/CD deploy.
-
-## To Do
-
-- Models page pre-rendering takes time, do an optimistic update.
-- Clicking on the models in the list results in a delayed response the first time. Ensure all model pages are pre-renders when the server starts.
-- When you click on run-model there no feed-back, provide a message and a spinner.
-- Provide for editing of material properties after adding them to the a model. Click in the Layers section on the name to edit.
-- Add edit materials button next to run simulation to add more materials to an existing model.
-- More edit name and description to where it is displayed on the edit model page.
-- When the shear goes from not a fluid to a fluid the UI errors.
-- When frequency is swept there needs to be a way of setting the angle.
-- When the angle is swept there needs to be a way to setting the frequency.
-- Add more animations work on UX.
-- Animate loading model also add spinner.
-- Work on calculations code.
-- Once data is available work on graphs and results section.
-- Once data is available add feature to down-load it through the browser.
+The operations side of this development project has been significant, getting the project to run on OSX, Debain, Windows and in a container running in Github actions, deploying to an AWS EC2. Took a lot of scripting and testing. The result is a flexible project which I can use to either extend the API that I have or create new servers for commercial application or other physics projects.

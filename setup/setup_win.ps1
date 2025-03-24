@@ -23,13 +23,9 @@ choco install ninja -y
 choco install mingw -y
 
 Write-Host "Installing PostgreSQL with the password 'test'"
-choco install postgresql --params '/Password:test' --ia '--enable-components server,commandlinetools'
+choco install postgresql13 --params '/Password:test' -y
 
 git clone https://github.com/apcave/acoustic-calcs.git
-
-Set-Location -Path "./acoustic-calcs"
-.\windows\source.ps1
-
 
 
 Write-Host "Please restart your computer to continue the setup."
