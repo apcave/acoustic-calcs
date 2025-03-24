@@ -114,5 +114,4 @@ echo -e "${GREEN}Docker and native builds completed.${NC}"
 echo -e "${GREEN}Run "python manage.py runserver 0.0.0.0:8080" in the acoustic-calcs/acoustic directory${NC}"
 echo -e "${GREEN}The dockfile is running on 0.0.0.0:80${NC}"
 
-cd scripts-ec2
-./test_server.sh localhost
+./scripts-ec2/test_server.sh localhost
