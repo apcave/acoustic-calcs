@@ -48,10 +48,14 @@ def run_model_endpoint(request):
         # Recursively convert JSON strings to Python objects
         data = convert_json_strings(data['data'])
 
-        result = run_simulation(data)
+        model = run_simulation(data)
     except Exception as e:
-        return Response({'error': str(e)}, status=400)
+        return Response({'error': str(e)}, status=401)
 
+    if model['results']['return_code'] != 0:
+        return Response(
+            {'error': model['results']['return_message']},
+            status=402)
     # Convert the result to a JSON string
     # result_json = json.dumps(result, indent=4)
 
@@ -59,4 +63,4 @@ def run_model_endpoint(request):
     # with open('simulation_result.json', 'w') as file:
     #    file.write(result_json)
 
-    return Response(result)
+    return Response(model)
