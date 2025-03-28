@@ -93,6 +93,40 @@ def run_simulation(model):
     ret = run_acoustic_simulation(is_comp, angle, freq, density, thick,
                                   cp, attp, LongM, cs, atts, mu)
 
+    # Filter out the NaN values
+    mask = (np.isnan(ret['Tp']['real']) | np.isnan(ret['Tp']['imag']) |
+            np.isnan(ret['Rp']['real']) | np.isnan(ret['Rp']['imag']) |
+            np.isnan(ret['Ts']['real']) | np.isnan(ret['Ts']['imag']) |
+            np.isnan(ret['Rs']['real']) | np.isnan(ret['Rs']['imag']) |
+            np.isnan(ret['TpE']) | np.isnan(ret['RpE']) |
+            np.isnan(ret['TsE']) | np.isnan(ret['RsE']))
+
+    mask = ~mask
+    MaxIndex = len(mask)
+    ret['Tp']['real'] = [ret['Tp']['real'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Tp']['imag'] = [ret['Tp']['imag'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Rp']['real'] = [ret['Rp']['real'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Rp']['imag'] = [ret['Rp']['imag'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Ts']['real'] = [ret['Ts']['real'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Ts']['imag'] = [ret['Ts']['imag'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Rs']['real'] = [ret['Rs']['real'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['Rs']['imag'] = [ret['Rs']['imag'][i]
+                         for i in range(MaxIndex) if mask[i]]
+    ret['TpE'] = [ret['TpE'][i] for i in range(MaxIndex) if mask[i]]
+    ret['RpE'] = [ret['RpE'][i] for i in range(MaxIndex) if mask[i]]
+    ret['TsE'] = [ret['TsE'][i] for i in range(MaxIndex) if mask[i]]
+    ret['RsE'] = [ret['RsE'][i] for i in range(MaxIndex) if mask[i]]
+
+    model['sweep']['values'] = [model['sweep']['values'][i]
+                                for i in range(MaxIndex) if mask[i]]
+
     model['results'] = ret
     # Return the results
     return model

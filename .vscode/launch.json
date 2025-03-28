@@ -7,7 +7,7 @@
     {
       "name": "debug testing",
       "type": "debugpy",
-      "args": ["runserver", "0.0.0.0:80"],
+      "args": ["runserver", "0.0.0.0:7080"],
       "request": "launch",
       "cwd": "${workspaceFolder}/acoustic",
       "program": "manage.py"

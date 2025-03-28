@@ -50,15 +50,21 @@ def run_model_endpoint(request):
 
         model = run_simulation(data)
     except Exception as e:
-        return Response({'error': str(e)}, status=401)
+        print('Model Crashed:', e)
+        return Response({'error': str(e), 'payload': data}, status=501)
 
     if model['results']['return_code'] != 0:
+        print("Model Errored with message: ",
+              model['results']['return_message'])
         return Response(
-            {'error': model['results']['return_message']},
-            status=402)
+            {
+                'error': model['results']['return_message'],
+                'payload': model
+             },
+            status=502)
     # Convert the result to a JSON string
     # result_json = json.dumps(result, indent=4)
-
+    # print('model:', model)
     # Write the result to a file
     # with open('simulation_result.json', 'w') as file:
     #    file.write(result_json)
