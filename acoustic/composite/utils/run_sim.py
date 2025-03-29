@@ -15,6 +15,8 @@ def run_simulation(model):
 
     # print("Running the model...")
     # print("Model input data:", model)
+    if (len(model['sweep']['values']) != model['sweep']['numSteps']):
+        raise ValueError("Number of steps doesn't match the number of values")
 
     is_comp = bool(model['incidentCompression'])
     if model['sweep']['isFrequency']:

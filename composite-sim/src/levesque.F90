@@ -386,7 +386,7 @@ CONTAINS
 
    END SUBROUTINE LayerPhysical
 
-   SUBROUTINE RESPONSE(isComp, cosinc, omega, density, thick, cp, cs, attp, atts, vLongM, vmu, &
+   SUBROUTINE RESPONSE(isComp, cosinc, in_omega, density, thick, cp, cs, attp, atts, vLongM, vmu, &
                        rp, tp, rs, ts, RpE, TpE, RsE, TsE)
 
       USE error_handling
@@ -394,14 +394,14 @@ CONTAINS
       IMPLICIT NONE
 
       logical, INTENT(IN) :: isComp ! 1 for P wave, 2 for SV wave
-      REAL(KIND=8), INTENT(IN) :: cosinc, omega ! Only one combinatioon is calulcated.
+      REAL(KIND=8), INTENT(IN) :: cosinc, in_omega ! Only one combinatioon is calulcated.
       REAL(KIND=8), INTENT(IN) :: density(:), thick(:), cp(:), cs(:), attp(:), atts(:)
       COMPLEX(KIND=8), INTENT(IN) :: vLongM(:), vmu(:)
       COMPLEX(KIND=8), INTENT(OUT) :: rp, tp, rs, ts
       REAL(KIND=8), INTENT(OUT) :: RpE, RsE, TpE, TsE
 
       INTEGER :: medium, m, n, ii, last
-      REAL(KIND=8) :: theta0, fnorm, amax, thetamin, thetamax
+      REAL(KIND=8) :: theta0, fnorm, amax, thetamin, thetamax, omega
       REAL(KIND=8) :: dd, rho, rho0, qp0, qs0, qpn, qsn
 
       COMPLEX(KIND=8) :: rhos22 ! Was a real check this is correct
@@ -416,6 +416,9 @@ CONTAINS
                          LongM, LongM0, mu, mu0, shrh, skrk, rhrk, &
                          nunu1, xi2hk, chss, shss, ckss, skss
       REAL(KIND=8)  :: hlns, klns, us, tempreal, dmax, bdmax, emin
+
+      omega = in_omega
+      if (omega < 1) omega = 1.0
 
       i = complex(0, 1)
       emin = -709
