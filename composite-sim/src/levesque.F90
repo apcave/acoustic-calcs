@@ -366,19 +366,23 @@ CONTAINS
          LongM = LongM + error*1D0
       end if
 
-      ! Write (6, *) '---------------------------------------------'
-      ! Write (6, *) 'omega:', omega
-      ! Write (6, *) 'Density rho:', rho
-      ! Write (6, *) 'Compressional Wave Speed cp:', cp
-      ! Write (6, *) 'Attenuation attp:', attp
-      ! Write (6, *) 'Shear Wave Speed cs:', cs
-      ! Write (6, *) 'Attenuation atts:', atts
 
-      ! Write (6, *) 'Shear Modulus mu:', mu
-      ! Write (6, *) 'Longitudinal Modulus:', LongM
 
       CALL CheckModuli(LongM, mu)
-      IF (has_error) RETURN
+      IF (has_error) THEN 
+         Write (6, *) '---------------------------------------------'
+         Write (6, *) 'omega:', omega
+         Write (6, *) 'Density rho:', rho
+         Write (6, *) 'Compressional Wave Speed cp:', cp
+         Write (6, *) 'Attenuation attp:', attp
+         Write (6, *) 'Shear Wave Speed cs:', cs
+         Write (6, *) 'Attenuation atts:', atts
+
+         Write (6, *) 'Shear Modulus mu:', mu
+         Write (6, *) 'Longitudinal Modulus:', LongM 
+         RETURN
+      ENDIF
+
 
    END SUBROUTINE LayerPhysical
 
